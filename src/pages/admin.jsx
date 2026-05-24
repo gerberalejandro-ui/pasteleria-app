@@ -10,15 +10,13 @@ export default function Admin() {
   }, []);
 
   const cargarUsuarios = async () => {
-    const { data, error } =
+    const { data } =
       await supabase
         .from("perfiles")
         .select("*")
-        .order("creado_en", {
-          ascending: false,
-        });
+        .order("email");
 
-    if (!error) {
+    if (data) {
       setUsuarios(data);
     }
   };
@@ -57,7 +55,7 @@ export default function Admin() {
           marginBottom: 20,
         }}
       >
-        Administración usuarios
+        Administración
       </h1>
 
       <div
@@ -124,7 +122,7 @@ export default function Admin() {
                       flexWrap: "wrap",
                     }}
                   >
-                    {!u.aprobado && (
+                    {!u.aprobado ? (
                       <button
                         onClick={() =>
                           aprobarUsuario(
@@ -133,10 +131,10 @@ export default function Admin() {
                         }
                         style={{
                           padding:
-                            "10px 14px",
+                            "8px 12px",
                           border:
                             "none",
-                          borderRadius: 10,
+                          borderRadius: 8,
                           background:
                             "#198754",
                           color:
@@ -147,9 +145,7 @@ export default function Admin() {
                       >
                         Aprobar
                       </button>
-                    )}
-
-                    {u.aprobado && (
+                    ) : (
                       <button
                         onClick={() =>
                           bloquearUsuario(
@@ -158,10 +154,10 @@ export default function Admin() {
                         }
                         style={{
                           padding:
-                            "10px 14px",
+                            "8px 12px",
                           border:
                             "none",
-                          borderRadius: 10,
+                          borderRadius: 8,
                           background:
                             "#dc3545",
                           color:
