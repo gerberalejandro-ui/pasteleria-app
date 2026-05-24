@@ -55,7 +55,9 @@ const logout = async () => {
           <Link to="/recetas" style={linkStyle}>
             Recetas
           </Link>
-
+          <Link to="/admin">
+            Admin
+          </Link>
       
         </div>
 

@@ -2,25 +2,53 @@ import { useState } from "react";
 import { supabase } from "../supabase";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
 
   const login = async () => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (error) {
       alert(error.message);
+      return;
     }
+
+    const { data: perfil, error: perfilError } =
+      await supabase
+        .from("perfiles")
+        .select("aprobado")
+        .eq("id", data.user.id)
+        .single();
+
+    if (
+      perfilError ||
+      !perfil?.aprobado
+    ) {
+      await supabase.auth.signOut();
+
+      alert(
+        "Tu usuario aún no fue aprobado"
+      );
+
+      return;
+    }
+
+    alert("Bienvenido");
   };
 
   const register = async () => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+    const { data, error } =
+      await supabase.auth.signUp({
+        email,
+        password,
+      });
 
     if (error) {
       alert(error.message);
@@ -30,51 +58,139 @@ export default function Login() {
     const user = data.user;
 
     if (user) {
-      await supabase.from("perfiles").insert([
-        {
-          id: user.id,
-          email: user.email,
-        },
-      ]);
+      const { error: perfilError } =
+        await supabase
+          .from("perfiles")
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              aprobado: false,
+            },
+          ]);
 
-      alert("Usuario registrado correctamente");
+      if (perfilError) {
+        console.log(perfilError);
+
+        alert(
+          "Error al crear perfil"
+        );
+
+        return;
+      }
+
+      alert(
+        "Registro enviado. Debes esperar aprobación del administrador."
+      );
     }
   };
 
   return (
     <div
       style={{
-        padding: 30,
-        display: "grid",
-        gap: 10,
-        maxWidth: 400,
-        margin: "50px auto",
-        background: "white",
-        borderRadius: 15,
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#fff7f0",
+        padding: 20,
       }}
     >
-      <h1>Login Pastelería</h1>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 400,
+          background: "white",
+          padding: 30,
+          borderRadius: 20,
+          display: "grid",
+          gap: 15,
+          boxShadow:
+            "0 4px 15px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h1
+          style={{
+            textAlign: "center",
+            color: "#d63384",
+          }}
+        >
+          Login Pastelería
+        </h1>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <div>
+          <label>Email</label>
 
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+          <input
+            style={{
+              width: "100%",
+              padding: 12,
+              borderRadius: 10,
+              border:
+                "1px solid #ccc",
+            }}
+            placeholder="Email"
+            value={email}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
+          />
+        </div>
 
-      <button onClick={login}>
-        Entrar
-      </button>
+        <div>
+          <label>Contraseña</label>
 
-      <button onClick={register}>
-        Registrarse
-      </button>
+          <input
+            style={{
+              width: "100%",
+              padding: 12,
+              borderRadius: 10,
+              border:
+                "1px solid #ccc",
+            }}
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) =>
+              setPassword(
+                e.target.value
+              )
+            }
+          />
+        </div>
+
+        <button
+          onClick={login}
+          style={{
+            padding: 14,
+            border: "none",
+            borderRadius: 12,
+            background: "#d63384",
+            color: "white",
+            fontWeight: "bold",
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
+          Entrar
+        </button>
+
+        <button
+          onClick={register}
+          style={{
+            padding: 14,
+            border: "none",
+            borderRadius: 12,
+            background: "#ff8fab",
+            color: "white",
+            fontWeight: "bold",
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
+          Solicitar acceso
+        </button>
+      </div>
     </div>
   );
 }
