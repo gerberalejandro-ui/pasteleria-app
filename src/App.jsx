@@ -10,7 +10,7 @@ import Productos from "./pages/Productos";
 import DetalleProducto from "./pages/DetalleProducto";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Admin from "./pages/Admin";
+
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -71,10 +71,6 @@ export default function App() {
           <Route
             path="/dashboard"
             element={user ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-          path="/admin"
-          element={<Admin />}
           />
         </Routes>
       </div>
