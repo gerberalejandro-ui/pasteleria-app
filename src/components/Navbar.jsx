@@ -2,10 +2,9 @@ import { Link } from "react-router-dom";
 import { supabase } from "../supabase";
 
 export default function Navbar({ user }) {
-  const logout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
-  };
+const logout = async () => {
+  await supabase.auth.signOut();
+};
 
   return (
     <div
