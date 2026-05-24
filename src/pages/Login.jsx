@@ -19,7 +19,7 @@ export default function Login() {
 
     const user = data.user;
 
-    // 🔐 buscar perfil
+    // 🔐 buscar perfil del usuario
     const { data: perfil, error: perfilError } =
       await supabase
         .from("perfiles")
@@ -27,13 +27,14 @@ export default function Login() {
         .eq("id", user.id)
         .single();
 
-    // ❌ si no existe perfil o no está aprobado
+    // ❌ si no existe perfil
     if (perfilError || !perfil) {
       await supabase.auth.signOut();
-      alert("Tu usuario no tiene perfil creado");
+      alert("Usuario sin perfil. Contactá al administrador.");
       return;
     }
 
+    // ❌ si no está aprobado
     if (!perfil.aprobado) {
       await supabase.auth.signOut();
       alert("Tu usuario aún no fue aprobado por el administrador");
@@ -59,14 +60,13 @@ export default function Login() {
 
     if (!user) return;
 
-    // 🔐 crear perfil SIEMPRE pendiente
+    // 🔐 crear perfil pendiente
     const { error: perfilError } =
       await supabase.from("perfiles").insert([
         {
           id: user.id,
           email: user.email,
           aprobado: false,
-          rol: "user",
         },
       ]);
 
@@ -102,26 +102,75 @@ export default function Login() {
           boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
         }}
       >
-        <h1 style={{ textAlign: "center", color: "#d63384" }}>
+        <h1
+          style={{
+            textAlign: "center",
+            color: "#d63384",
+          }}
+        >
           Login Pastelería
         </h1>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div>
+          <label>Email</label>
+          <input
+            style={{
+              width: "100%",
+              padding: 12,
+              borderRadius: 10,
+              border: "1px solid #ccc",
+            }}
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div>
+          <label>Contraseña</label>
+          <input
+            style={{
+              width: "100%",
+              padding: 12,
+              borderRadius: 10,
+              border: "1px solid #ccc",
+            }}
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-        <button onClick={login}>Entrar</button>
+        <button
+          onClick={login}
+          style={{
+            padding: 14,
+            border: "none",
+            borderRadius: 12,
+            background: "#d63384",
+            color: "white",
+            fontWeight: "bold",
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
+          Entrar
+        </button>
 
-        <button onClick={register}>
+        <button
+          onClick={register}
+          style={{
+            padding: 14,
+            border: "none",
+            borderRadius: 12,
+            background: "#ff8fab",
+            color: "white",
+            fontWeight: "bold",
+            cursor: "pointer",
+            fontSize: 16,
+          }}
+        >
           Solicitar acceso
         </button>
       </div>
