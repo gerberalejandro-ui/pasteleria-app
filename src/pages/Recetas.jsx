@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
+
 export default function Recetas() {
   const [insumos, setInsumos] = useState([]);
   const [recetas, setRecetas] = useState([]);
