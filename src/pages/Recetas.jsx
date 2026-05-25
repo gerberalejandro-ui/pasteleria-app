@@ -74,7 +74,7 @@ export default function Recetas() {
 
   /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
-    const insumo = insumos.find((i) => i.id === parseInt(insumoId));
+    const insumo = insumos.find((i) => String(i.id) === String(insumoId));
     if (!insumo || !cantidad) return;
 
     const c = Number(cantidad);
@@ -264,7 +264,7 @@ export default function Recetas() {
             onChange={(e) => setInsumoId(e.target.value)}
             style={styles.input}
           >
-            <option>➕ Insumo</option>
+            <option value="">➕ Insumo</option> {/* ✔ FIX */}
             {insumos.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nombre}
