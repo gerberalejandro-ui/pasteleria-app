@@ -73,9 +73,16 @@ export default function Recetas() {
   };
 
   /* ================= INGREDIENTES ================= */
-  const agregarIngrediente = () => {
-    const insumo = insumos.find((i) => String(i.id) === String(insumoId));
-    if (!insumo || !cantidad) return;
+    const agregarIngrediente = () => {
+    // 🔥 FIX 1: evitar ejecución si no hay datos
+    if (!insumoId || !cantidad) return;
+    if (!insumos || insumos.length === 0) return;
+
+    const insumo = insumos.find(
+      (i) => String(i.id) === String(insumoId)
+    );
+
+    if (!insumo) return;
 
     const c = Number(cantidad);
 
