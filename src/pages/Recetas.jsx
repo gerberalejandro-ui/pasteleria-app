@@ -2,84 +2,47 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
 export default function Recetas() {
-  const [insumos, setInsumos] =
-    useState([]);
+  const [insumos, setInsumos] = useState([]);
+  const [recetas, setRecetas] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [recetaExpandida, setRecetaExpandida] = useState(null);
 
-  const [recetas, setRecetas] =
-    useState([]);
+  const [nuevaReceta, setNuevaReceta] = useState({
+    nombre: "",
+    margen: 100,
+    procedimiento: "",
+    tiempo_horas: "",
+    valor_hora: "",
+    costo_luz: "",
+    ingredientes: [],
+  });
 
-  const [busqueda, setBusqueda] =
-    useState("");
-
-  const [
-    mostrarFormulario,
-    setMostrarFormulario,
-  ] = useState(false);
-
-  const [
-    recetaExpandida,
-    setRecetaExpandida,
-  ] = useState(null);
-
-  const [nuevaReceta, setNuevaReceta] =
-    useState({
-      nombre: "",
-      margen: 100,
-      procedimiento: "",
-      tiempo_horas: "",
-      valor_hora: "",
-      costo_luz: "",
-      ingredientes: [],
-    });
-
-  const [insumoId, setInsumoId] =
-    useState("");
-
-  const [cantidad, setCantidad] =
-    useState("");
+  const [insumoId, setInsumoId] = useState("");
+  const [cantidad, setCantidad] = useState("");
 
   useEffect(() => {
     cargarDatos();
   }, []);
 
   const cargarDatos = async () => {
-    const ins = await supabase
-      .from("insumos")
-      .select("*");
-
-    const rec = await supabase
-      .from("recetas")
-      .select("*")
-      .order("nombre", {
-        ascending: true,
-      });
+    const ins = await supabase.from("insumos").select("*");
+    const rec = await supabase.from("recetas").select("*").order("nombre", { ascending: true });
 
     if (ins.data) setInsumos(ins.data);
-
     if (rec.data) setRecetas(rec.data);
   };
 
   const agregarIngrediente = () => {
-    const insumo = insumos.find(
-      (i) =>
-        i.id === parseInt(insumoId)
-    );
-
+    const insumo = insumos.find((i) => i.id === parseInt(insumoId));
     if (!insumo || !cantidad) return;
 
     let costo = 0;
 
-    if (
-      insumo.unidad === "kg" ||
-      insumo.unidad === "litro"
-    ) {
-      costo =
-        (insumo.precio / 1000) *
-        parseFloat(cantidad);
+    if (insumo.unidad === "kg" || insumo.unidad === "litro") {
+      costo = (insumo.precio / 1000) * parseFloat(cantidad);
     } else {
-      costo =
-        insumo.precio *
-        parseFloat(cantidad);
+      costo = insumo.precio * parseFloat(cantidad);
     }
 
     const ingrediente = {
@@ -91,67 +54,47 @@ export default function Recetas() {
 
     setNuevaReceta({
       ...nuevaReceta,
-      ingredientes: [
-        ...nuevaReceta.ingredientes,
-        ingrediente,
-      ],
+      ingredientes: [...nuevaReceta.ingredientes, ingrediente],
     });
 
     setInsumoId("");
     setCantidad("");
   };
 
-  const calcularCostoIngredientes =
-    () => {
-      return nuevaReceta.ingredientes.reduce(
-        (acc, item) =>
-          acc + item.costo,
-        0
-      );
-    };
+  const calcularCostoIngredientes = () => {
+    return nuevaReceta.ingredientes.reduce((acc, item) => acc + item.costo, 0);
+  };
 
   const guardarReceta = async () => {
-    if (
-      !nuevaReceta.nombre ||
-      nuevaReceta.ingredientes.length === 0
-    ) {
+    if (!nuevaReceta.nombre || nuevaReceta.ingredientes.length === 0) {
       alert("Completa la receta");
       return;
     }
 
-    const costoIngredientes =
-      calcularCostoIngredientes();
-
+    const costoIngredientes = calcularCostoIngredientes();
     const manoObra =
       Number(nuevaReceta.tiempo_horas || 0) *
       Number(nuevaReceta.valor_hora || 0);
 
     const costoFinal =
-      costoIngredientes +
-      manoObra +
-      Number(nuevaReceta.costo_luz || 0);
+      costoIngredientes + manoObra + Number(nuevaReceta.costo_luz || 0);
 
     const precioFinal =
-      costoFinal +
-      (costoFinal *
-        Number(nuevaReceta.margen || 0)) /
-        100;
+      costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
-    const { error } = await supabase
-      .from("recetas")
-      .insert([
-        {
-          nombre: nuevaReceta.nombre,
-          margen: Number(nuevaReceta.margen),
-          procedimiento: nuevaReceta.procedimiento,
-          tiempo_horas: Number(nuevaReceta.tiempo_horas),
-          valor_hora: Number(nuevaReceta.valor_hora),
-          costo_luz: Number(nuevaReceta.costo_luz),
-          costo: costoFinal,
-          precio_final: precioFinal,
-          ingredientes: nuevaReceta.ingredientes,
-        },
-      ]);
+    const { error } = await supabase.from("recetas").insert([
+      {
+        nombre: nuevaReceta.nombre,
+        margen: Number(nuevaReceta.margen),
+        procedimiento: nuevaReceta.procedimiento,
+        tiempo_horas: Number(nuevaReceta.tiempo_horas),
+        valor_hora: Number(nuevaReceta.valor_hora),
+        costo_luz: Number(nuevaReceta.costo_luz),
+        costo: costoFinal,
+        precio_final: precioFinal,
+        ingredientes: nuevaReceta.ingredientes,
+      },
+    ]);
 
     if (error) {
       console.log(error);
@@ -188,137 +131,246 @@ export default function Recetas() {
   );
 
   return (
-    <div style={{ padding: 15, width: "100%", boxSizing: "border-box" }}>
-      <h1 style={{ color: "#d63384", marginBottom: 20, fontSize: 32 }}>
-        Recetas
-      </h1>
+    <div style={styles.page}>
+      
+      <div style={styles.header}>
+        <h1 style={styles.title}>Recetas</h1>
 
-      {/* TODO TU CÓDIGO IGUAL HASTA ACÁ */}
+        <div style={styles.actions}>
+          <button
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+            style={styles.btnPrimary}
+          >
+            {mostrarFormulario ? "Cerrar formulario" : "Nueva receta"}
+          </button>
 
-      <tbody>
-        {recetasFiltradas.map((r) => (
-          <>
-            <tr key={r.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={tdStyle}>{r.nombre}</td>
-              <td style={tdStyle}>${Number(r.costo).toFixed(2)}</td>
-              <td style={tdStyle}>${Number(r.precio_final).toFixed(2)}</td>
-              <td style={tdStyle}>{r.tiempo_horas}</td>
+          <input
+            style={styles.search}
+            placeholder="Buscar receta..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+      </div>
 
-              <td style={tdStyle}>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    onClick={() =>
-                      setRecetaExpandida(
-                        recetaExpandida === r.id ? null : r.id
-                      )
-                    }
-                    style={{
-                      padding: "8px 12px",
-                      border: "none",
-                      borderRadius: 8,
-                      background: "#ff8fab",
-                      color: "white",
-                      cursor: "pointer",
-                      minWidth: 90,
-                    }}
-                  >
-                    Ver
-                  </button>
+      {mostrarFormulario && (
+        <div style={styles.card}>
+          <h2 style={styles.subtitle}>Nueva receta</h2>
 
-                  <button
-                    onClick={() => eliminarReceta(r.id)}
-                    style={{
-                      padding: "8px 12px",
-                      border: "none",
-                      borderRadius: 8,
-                      background: "#dc3545",
-                      color: "white",
-                      cursor: "pointer",
-                      minWidth: 90,
-                    }}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </td>
+          <input
+            style={styles.input}
+            placeholder="Nombre receta"
+            value={nuevaReceta.nombre}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
+            }
+          />
+
+          <textarea
+            style={{ ...styles.input, minHeight: 120 }}
+            placeholder="Procedimiento"
+            value={nuevaReceta.procedimiento}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, procedimiento: e.target.value })
+            }
+          />
+
+          <div style={styles.grid}>
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Horas"
+              value={nuevaReceta.tiempo_horas}
+              onChange={(e) =>
+                setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
+              }
+            />
+
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Valor hora"
+              value={nuevaReceta.valor_hora}
+              onChange={(e) =>
+                setNuevaReceta({ ...nuevaReceta, valor_hora: e.target.value })
+              }
+            />
+
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Costo luz"
+              value={nuevaReceta.costo_luz}
+              onChange={(e) =>
+                setNuevaReceta({ ...nuevaReceta, costo_luz: e.target.value })
+              }
+            />
+
+            <input
+              style={styles.input}
+              type="number"
+              placeholder="Margen %"
+              value={nuevaReceta.margen}
+              onChange={(e) =>
+                setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
+              }
+            />
+          </div>
+
+          <button style={styles.btnSecondary} onClick={agregarIngrediente}>
+            Agregar ingrediente
+          </button>
+
+          <h3 style={styles.sectionTitle}>Ingredientes</h3>
+
+          {nuevaReceta.ingredientes.map((i, index) => (
+            <div key={index} style={styles.ingredient}>
+              <b>{i.nombre}</b>
+              <span>{i.cantidad} {i.unidad}</span>
+              <span>${Number(i.costo).toFixed(2)}</span>
+            </div>
+          ))}
+
+          <button style={styles.btnPrimary} onClick={guardarReceta}>
+            Guardar receta
+          </button>
+        </div>
+      )}
+
+      <div style={styles.tableCard}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Receta</th>
+              <th>Costo</th>
+              <th>Precio</th>
+              <th>Horas</th>
+              <th>Acciones</th>
             </tr>
+          </thead>
 
-            {recetaExpandida === r.id && (
-              <tr>
-                <td colSpan="5" style={{ background: "#fff7f0", padding: 20 }}>
+          <tbody>
+            {recetasFiltradas.map((r) => (
+              <>
+                <tr key={r.id}>
+                  <td>{r.nombre}</td>
+                  <td>${Number(r.costo).toFixed(2)}</td>
+                  <td>${Number(r.precio_final).toFixed(2)}</td>
+                  <td>{r.tiempo_horas}</td>
+                  <td>
+                    <button style={styles.btnSmall}>
+                      Ver
+                    </button>
 
-                  {/* 🔥 SOLO CAMBIO: LAYOUT TIPO COLUMNAS (EXCEL REAL) */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-
-                    {/* PROCEDIMIENTO ARRIBA */}
-                    <div style={{ background: "white", padding: 15, borderRadius: 10 }}>
-                      <h3>Procedimiento</h3>
-                      <p>{r.procedimiento}</p>
-                    </div>
-
-                    {/* TABLA DE INGREDIENTES */}
-                    <div style={{ background: "white", padding: 15, borderRadius: 10, overflowX: "auto" }}>
-                      <h3>Ingredientes</h3>
-
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                          <tr>
-                            <th>Ingrediente</th>
-                            <th>Cantidad</th>
-                            <th>Unidad</th>
-                            <th>Costo</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {r.ingredientes?.map((i, index) => (
-                            <tr key={index}>
-                              <td>{i.nombre}</td>
-                              <td>{i.cantidad}</td>
-                              <td>{i.unidad}</td>
-                              <td>${Number(i.costo).toFixed(2)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* DATOS ABAJO */}
-                    <div style={{ background: "white", padding: 15, borderRadius: 10 }}>
-                      <p><strong>Valor hora:</strong> ${r.valor_hora}</p>
-                      <p><strong>Costo luz:</strong> ${r.costo_luz}</p>
-                      <p><strong>Margen:</strong> {r.margen}%</p>
-                    </div>
-
-                  </div>
-
-                </td>
-              </tr>
-            )}
-          </>
-        ))}
-      </tbody>
+                    <button
+                      style={{ ...styles.btnSmall, background: "#dc3545" }}
+                      onClick={() => eliminarReceta(r.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              </>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  marginTop: 5,
-  boxSizing: "border-box",
-  fontSize: 15,
-};
+/* ================= STYLES ================= */
 
-const thStyle = {
-  padding: 15,
-  textAlign: "left",
-  whiteSpace: "nowrap",
-};
-
-const tdStyle = {
-  padding: 15,
-  whiteSpace: "nowrap",
+const styles = {
+  page: {
+    padding: 20,
+    background: "#f6f7fb",
+    minHeight: "100vh",
+    fontFamily: "Arial",
+  },
+  header: {
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 34,
+    color: "#d63384",
+  },
+  actions: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  card: {
+    background: "white",
+    padding: 20,
+    borderRadius: 16,
+    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+    marginBottom: 20,
+  },
+  tableCard: {
+    background: "white",
+    borderRadius: 16,
+    overflow: "hidden",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+  },
+  input: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    marginBottom: 10,
+  },
+  search: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 10,
+    border: "1px solid #ddd",
+  },
+  btnPrimary: {
+    background: "#d63384",
+    color: "white",
+    padding: 12,
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+  },
+  btnSecondary: {
+    background: "#ff8fab",
+    color: "white",
+    padding: 12,
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    marginTop: 10,
+  },
+  btnSmall: {
+    padding: "6px 10px",
+    marginRight: 5,
+    borderRadius: 8,
+    border: "none",
+    background: "#ff8fab",
+    color: "white",
+    cursor: "pointer",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: 10,
+  },
+  ingredient: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: 10,
+    background: "#ffe5ec",
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    marginTop: 15,
+    color: "#d63384",
+  },
 };
