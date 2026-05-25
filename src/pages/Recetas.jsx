@@ -20,7 +20,7 @@ export default function Recetas() {
     tiempo_horas: "",
     horas_luz: "",
     ingredientes: [],
-    margen: 30,
+   // margen: 30,
   });
 
   const [insumoId, setInsumoId] = useState("");
@@ -157,11 +157,11 @@ export default function Recetas() {
       },
     ]);
 
-  if (error) {
-    console.log(error);
-    alert(error.message);
-    return;
-  }
+    if (error) {
+      console.log(error);
+      alert("Error al guardar receta");
+      return;
+    }
 
     await cargarDatos();
 
