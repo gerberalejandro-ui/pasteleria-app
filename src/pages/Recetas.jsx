@@ -34,13 +34,16 @@ export default function Recetas() {
   };
 
   /* =========================
-     🔥 CORRECCIÓN DE UNIDADES
+     🔥 UNIDADES CORREGIDAS REALMENTE BIEN
   ========================= */
   const formatearUnidad = (unidad, cantidad) => {
     const cant = Number(cantidad);
 
-    if (unidad === "kg") return `${cant * 1000} g`;
-    if (unidad === "litro") return `${cant * 1000} ml`;
+    // IMPORTANTE:
+    // NO multiplicar si ya estás cargando cantidad directa (evita 70000 g error)
+
+    if (unidad === "kg") return `${cant} kg`;
+    if (unidad === "litro") return `${cant} L`;
 
     return `${cant} ${unidad}`;
   };
@@ -146,7 +149,7 @@ export default function Recetas() {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>Recetas</h1>
+      <h1 style={styles.title}>📋 Recetas</h1>
 
       <div style={styles.topBar}>
         <button
@@ -158,7 +161,7 @@ export default function Recetas() {
 
         <input
           style={styles.search}
-          placeholder="Buscar..."
+          placeholder="Buscar receta..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -167,7 +170,7 @@ export default function Recetas() {
       {/* FORM */}
       {mostrarFormulario && (
         <div style={styles.card}>
-          <h3>Nueva receta</h3>
+          <h3>➕ Nueva receta</h3>
 
           <input
             style={styles.input}
@@ -187,11 +190,10 @@ export default function Recetas() {
             }
           />
 
-          {/* 🔥 NUEVO: HORAS HOMBRE */}
           <input
             style={styles.input}
             type="number"
-            placeholder="Horas hombre"
+            placeholder="Horas de trabajo"
             value={nuevaReceta.tiempo_horas}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
@@ -208,11 +210,10 @@ export default function Recetas() {
             }
           />
 
-          {/* 🔥 NUEVO: COSTO LUZ */}
           <input
             style={styles.input}
             type="number"
-            placeholder="Costo de luz"
+            placeholder="Costo luz"
             value={nuevaReceta.costo_luz}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, costo_luz: e.target.value })
@@ -247,7 +248,7 @@ export default function Recetas() {
           <div style={{ marginTop: 10 }}>
             {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
-                <span>{i.nombre}</span>
+                <span><b>{i.nombre}</b></span>
                 <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                 <span>${i.costo.toFixed(2)}</span>
               </div>
@@ -255,7 +256,7 @@ export default function Recetas() {
           </div>
 
           <button style={styles.btnPrimary} onClick={guardarReceta}>
-            Guardar
+            Guardar receta
           </button>
         </div>
       )}
@@ -265,10 +266,10 @@ export default function Recetas() {
         {recetasFiltradas.map((r) => (
           <div key={r.id}>
             <div style={styles.row}>
-              <div>{r.nombre}</div>
-              <div>${Number(r.costo).toFixed(2)}</div>
-              <div>${Number(r.precio_final).toFixed(2)}</div>
-              <div>{r.tiempo_horas}</div>
+              <div><b>{r.nombre}</b></div>
+              <div>💰 Costo: ${Number(r.costo).toFixed(2)}</div>
+              <div>💲 Precio: ${Number(r.precio_final).toFixed(2)}</div>
+              <div>⏱ Horas: {r.tiempo_horas}</div>
 
               <div>
                 <button
@@ -293,14 +294,14 @@ export default function Recetas() {
               <div style={styles.expand}>
                 <h2 style={{ color: "#d63384" }}>{r.nombre}</h2>
 
-                <h3>Procedimiento</h3>
+                <h3>📌 Procedimiento</h3>
                 <p>{r.procedimiento}</p>
 
-                <h3>Ingredientes</h3>
+                <h3>🧾 Ingredientes</h3>
 
                 {r.ingredientes?.map((i, index) => (
                   <div key={index} style={styles.rowIng}>
-                    <span>{i.nombre}</span>
+                    <span><b>{i.nombre}</b></span>
                     <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                     <span>${Number(i.costo).toFixed(2)}</span>
                   </div>
@@ -314,8 +315,7 @@ export default function Recetas() {
   );
 }
 
-/* ===== styles ===== */
-
+/* styles igual */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 34, color: "#d63384" },
@@ -324,7 +324,7 @@ const styles = {
   table: { display: "flex", flexDirection: "column", gap: 10 },
   row: {
     display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+    gridTemplateColumns: "2fr 2fr 2fr 1fr 1fr",
     background: "white",
     padding: 12,
     borderRadius: 10,
