@@ -33,22 +33,39 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
+  /* ======================
+     🔧 NORMALIZAR UNIDADES
+  ====================== */
+  const formatearUnidad = (unidad, cantidad) => {
+    if (unidad === "kg") {
+      return cantidad < 1 ? `${cantidad * 1000} g` : `${cantidad} kg`;
+    }
+
+    if (unidad === "litro") {
+      return cantidad < 1 ? `${cantidad * 1000} ml` : `${cantidad} L`;
+    }
+
+    return `${cantidad} ${unidad}`;
+  };
+
   const agregarIngrediente = () => {
     const insumo = insumos.find((i) => i.id === parseInt(insumoId));
     if (!insumo || !cantidad) return;
 
+    const cant = parseFloat(cantidad);
+
     let costo = 0;
 
     if (insumo.unidad === "kg" || insumo.unidad === "litro") {
-      costo = (insumo.precio / 1000) * parseFloat(cantidad);
+      costo = (insumo.precio / 1000) * cant;
     } else {
-      costo = insumo.precio * parseFloat(cantidad);
+      costo = insumo.precio * cant;
     }
 
     const ingrediente = {
       nombre: insumo.nombre,
       unidad: insumo.unidad,
-      cantidad: parseFloat(cantidad),
+      cantidad: cant,
       costo,
     };
 
@@ -61,9 +78,8 @@ export default function Recetas() {
     setCantidad("");
   };
 
-  const calcularCostoIngredientes = () => {
-    return nuevaReceta.ingredientes.reduce((acc, item) => acc + item.costo, 0);
-  };
+  const calcularCostoIngredientes = () =>
+    nuevaReceta.ingredientes.reduce((acc, item) => acc + item.costo, 0);
 
   const guardarReceta = async () => {
     if (!nuevaReceta.nombre || nuevaReceta.ingredientes.length === 0) {
@@ -134,6 +150,7 @@ export default function Recetas() {
     <div style={styles.page}>
       <h1 style={styles.title}>Recetas</h1>
 
+      {/* HEADER */}
       <div style={styles.topBar}>
         <button
           style={styles.btnPrimary}
@@ -150,13 +167,14 @@ export default function Recetas() {
         />
       </div>
 
+      {/* FORM */}
       {mostrarFormulario && (
         <div style={styles.card}>
           <h3>Nueva receta</h3>
 
           <input
             style={styles.input}
-            placeholder="Nombre"
+            placeholder="Nombre ingrediente"
             value={nuevaReceta.nombre}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
@@ -172,18 +190,38 @@ export default function Recetas() {
             }
           />
 
+          {/* 🔥 SELECT INSUMOS CORREGIDO */}
+          <select
+            style={styles.input}
+            value={insumoId}
+            onChange={(e) => setInsumoId(e.target.value)}
+          >
+            <option value="">Seleccionar insumo</option>
+            {insumos.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.nombre}
+              </option>
+            ))}
+          </select>
+
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Cantidad"
+            value={cantidad}
+            onChange={(e) => setCantidad(e.target.value)}
+          />
+
           <button style={styles.btnSecondary} onClick={agregarIngrediente}>
             Agregar ingrediente
           </button>
 
-          <h4>Ingredientes</h4>
-
-          <div style={styles.tableIngredients}>
+          {/* INGREDIENTES */}
+          <div style={{ marginTop: 10 }}>
             {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
                 <span>{i.nombre}</span>
-                <span>{i.cantidad}</span>
-                <span>{i.unidad}</span>
+                <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                 <span>${i.costo.toFixed(2)}</span>
               </div>
             ))}
@@ -195,10 +233,11 @@ export default function Recetas() {
         </div>
       )}
 
+      {/* LISTA */}
       <div style={styles.table}>
         {recetasFiltradas.map((r) => (
           <>
-            <div style={styles.row}>
+            <div style={styles.row} key={r.id}>
               <div>{r.nombre}</div>
               <div>${Number(r.costo).toFixed(2)}</div>
               <div>${Number(r.precio_final).toFixed(2)}</div>
@@ -234,16 +273,11 @@ export default function Recetas() {
                   {r.ingredientes?.map((i, index) => (
                     <div key={index} style={styles.rowIng}>
                       <span>{i.nombre}</span>
-                      <span>{i.cantidad}</span>
-                      <span>{i.unidad}</span>
+                      <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                       <span>${Number(i.costo).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
-
-                <p><b>Costo:</b> ${r.costo}</p>
-                <p><b>Precio:</b> ${r.precio_final}</p>
-                <p><b>Margen:</b> {r.margen}%</p>
               </div>
             )}
           </>
@@ -253,66 +287,32 @@ export default function Recetas() {
   );
 }
 
-/* ===== ESTILOS ===== */
+/* ===== estilos ===== */
 
 const styles = {
-  page: {
-    padding: 20,
-    background: "#f6f7fb",
-    minHeight: "100vh",
-  },
-  title: {
-    fontSize: 34,
-    color: "#d63384",
-  },
-  topBar: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 20,
-  },
-  card: {
-    background: "white",
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  table: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-  },
+  page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
+  title: { fontSize: 34, color: "#d63384" },
+  topBar: { display: "flex", gap: 10, marginBottom: 20 },
+  card: { background: "white", padding: 20, borderRadius: 12 },
+  table: { display: "flex", flexDirection: "column", gap: 10 },
   row: {
     display: "grid",
     gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
-    padding: 12,
     background: "white",
+    padding: 12,
     borderRadius: 10,
   },
-  expand: {
-    background: "#fff7f0",
-    padding: 15,
-    borderRadius: 10,
-  },
-  tableIngredients: {
-    display: "grid",
-    gap: 6,
-  },
+  expand: { background: "#fff7f0", padding: 15, borderRadius: 10 },
+  tableIngredients: { display: "grid", gap: 6 },
   rowIng: {
     display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr 1fr",
-    background: "#ffe5ec",
+    gridTemplateColumns: "2fr 1fr 1fr",
     padding: 8,
+    background: "#ffe5ec",
     borderRadius: 8,
   },
-  input: {
-    width: "100%",
-    padding: 10,
-    marginBottom: 10,
-  },
-  search: {
-    flex: 1,
-    padding: 10,
-  },
+  input: { width: "100%", padding: 10, marginBottom: 10 },
+  search: { flex: 1, padding: 10 },
   btnPrimary: {
     background: "#d63384",
     color: "white",
@@ -326,6 +326,7 @@ const styles = {
     padding: 10,
     border: "none",
     borderRadius: 8,
+    marginTop: 5,
   },
   btnSmall: {
     marginRight: 5,
