@@ -251,7 +251,7 @@ export default function Recetas() {
 
           <input
             style={styles.input}
-            placeholder=" Margen %"
+            placeholder="📈 Margen Ganancia"
             type="number"
             value={nuevaReceta.margen}
             onChange={(e) =>
