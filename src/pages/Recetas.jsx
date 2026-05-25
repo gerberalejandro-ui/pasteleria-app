@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
-
 export default function Recetas() {
   const [insumos, setInsumos] = useState([]);
   const [recetas, setRecetas] = useState([]);
@@ -35,20 +34,13 @@ export default function Recetas() {
   };
 
   /* =========================
-     🔥 UNIDADES CORREGIDAS
+     🔥 CORRECCIÓN DE UNIDADES
   ========================= */
   const formatearUnidad = (unidad, cantidad) => {
     const cant = Number(cantidad);
 
-    if (unidad === "kg") {
-      // SIEMPRE mostrar en gramos para precisión
-      return `${cant * 1000} g`;
-    }
-
-    if (unidad === "litro") {
-      // SIEMPRE mostrar en ml para precisión
-      return `${cant * 1000} ml`;
-    }
+    if (unidad === "kg") return `${cant * 1000} g`;
+    if (unidad === "litro") return `${cant * 1000} ml`;
 
     return `${cant} ${unidad}`;
   };
@@ -195,6 +187,38 @@ export default function Recetas() {
             }
           />
 
+          {/* 🔥 NUEVO: HORAS HOMBRE */}
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Horas hombre"
+            value={nuevaReceta.tiempo_horas}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
+            }
+          />
+
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Valor hora"
+            value={nuevaReceta.valor_hora}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, valor_hora: e.target.value })
+            }
+          />
+
+          {/* 🔥 NUEVO: COSTO LUZ */}
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Costo de luz"
+            value={nuevaReceta.costo_luz}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, costo_luz: e.target.value })
+            }
+          />
+
           <select
             style={styles.input}
             value={insumoId}
@@ -239,8 +263,8 @@ export default function Recetas() {
       {/* LISTA */}
       <div style={styles.table}>
         {recetasFiltradas.map((r) => (
-          <>
-            <div style={styles.row} key={r.id}>
+          <div key={r.id}>
+            <div style={styles.row}>
               <div>{r.nombre}</div>
               <div>${Number(r.costo).toFixed(2)}</div>
               <div>${Number(r.precio_final).toFixed(2)}</div>
@@ -267,8 +291,6 @@ export default function Recetas() {
 
             {recetaExpandida === r.id && (
               <div style={styles.expand}>
-                
-                {/* 🔥 NOMBRE AGREGADO */}
                 <h2 style={{ color: "#d63384" }}>{r.nombre}</h2>
 
                 <h3>Procedimiento</h3>
@@ -285,14 +307,14 @@ export default function Recetas() {
                 ))}
               </div>
             )}
-          </>
+          </div>
         ))}
       </div>
     </div>
   );
 }
 
-/* ===== estilos (IGUAL) ===== */
+/* ===== styles ===== */
 
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
