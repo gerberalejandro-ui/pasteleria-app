@@ -324,7 +324,13 @@ export default function Recetas() {
           >
             ➕ Agregar ingrediente
           </button>
-
+            {nuevaReceta.ingredientes.map((i, index) => (
+              <div key={index} style={styles.rowIng}>
+                <span>{i.nombre}</span>
+                <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
+                <span>${i.costo}</span>
+              </div>
+            ))}
           <button onClick={guardarReceta} style={styles.btnPrimary}>
             💾 Guardar receta
           </button>
