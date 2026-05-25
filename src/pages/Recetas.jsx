@@ -30,7 +30,6 @@ export default function Recetas() {
     cargarConfig();
   }, []);
 
-  /* ================= CONFIG COSTOS ================= */
   const cargarConfig = async () => {
     const { data } = await supabase.from("costo_config").select("*");
 
@@ -62,7 +61,6 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
-  /* ================= UNIDADES ================= */
   const formatearUnidad = (unidad, cantidad) => {
     const c = Number(cantidad);
 
@@ -72,7 +70,6 @@ export default function Recetas() {
     return `${c} ${unidad}`;
   };
 
-  /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
     const insumo = insumos.find((i) => String(i.id) === String(insumoId));
     if (!insumo || !cantidad) return;
@@ -91,10 +88,11 @@ export default function Recetas() {
       costo,
     };
 
-    setNuevaReceta({
-      ...nuevaReceta,
-      ingredientes: [...nuevaReceta.ingredientes, ingrediente],
-    });
+    // 🔥 FIX APLICADO SOLO AQUÍ
+    setNuevaReceta((prev) => ({
+      ...prev,
+      ingredientes: [...prev.ingredientes, ingrediente],
+    }));
 
     setInsumoId("");
     setCantidad("");
@@ -103,7 +101,6 @@ export default function Recetas() {
   const calcularCostoIngredientes = () =>
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
-  /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
     const ingredientes = calcularCostoIngredientes();
 
@@ -151,12 +148,10 @@ export default function Recetas() {
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  /* ================= UI ================= */
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>🧾 Recetas</h1>
 
-      {/* CONFIG COSTOS */}
       <div style={styles.configBox}>
         <h3>⚙️ Configuración de costos</h3>
 
@@ -191,28 +186,22 @@ export default function Recetas() {
         </button>
       </div>
 
-      {/* TOP */}
       <div style={styles.topBar}>
-        <button
-          onClick={() => setMostrarFormulario(!mostrarFormulario)}
-          style={styles.btnPrimary}
-        >
-          ➕ {mostrarFormulario ? "Cerrar" : "Nueva receta"}
+        <button onClick={() => setMostrarFormulario(!mostrarFormulario)}>
+          {mostrarFormulario ? "Cerrar" : "Nueva receta"}
         </button>
 
         <input
-          style={styles.search}
           placeholder="🔎 Buscar receta..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
+          style={{ flex: 1 }}
         />
       </div>
 
-      {/* FORM */}
       {mostrarFormulario && (
         <div style={styles.card}>
           <input
-            style={styles.input}
             placeholder="🧾 Nombre"
             value={nuevaReceta.nombre}
             onChange={(e) =>
@@ -221,7 +210,6 @@ export default function Recetas() {
           />
 
           <textarea
-            style={styles.input}
             placeholder="📌 Procedimiento"
             value={nuevaReceta.procedimiento}
             onChange={(e) =>
@@ -230,9 +218,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="⏱ Horas trabajo"
             type="number"
+            placeholder="⏱ Horas trabajo"
             value={nuevaReceta.tiempo_horas}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
@@ -240,9 +227,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="💡 Horas luz"
             type="number"
+            placeholder="💡 Horas luz"
             value={nuevaReceta.horas_luz}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, horas_luz: e.target.value })
@@ -250,9 +236,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="📈 Margen %"
             type="number"
+            placeholder="📈 Margen %"
             value={nuevaReceta.margen}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
@@ -264,7 +249,7 @@ export default function Recetas() {
             onChange={(e) => setInsumoId(e.target.value)}
             style={styles.input}
           >
-            <option value="">➕ Insumo</option> {/* ✔ FIX */}
+            <option value="">➕ Insumo</option>
             {insumos.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nombre}
@@ -273,9 +258,8 @@ export default function Recetas() {
           </select>
 
           <input
-            style={styles.input}
-            placeholder="Cantidad"
             type="number"
+            placeholder="Cantidad"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
           />
@@ -290,7 +274,6 @@ export default function Recetas() {
         </div>
       )}
 
-      {/* LISTA */}
       <div style={styles.table}>
         {recetasFiltradas.map((r) => (
           <>
@@ -343,7 +326,6 @@ export default function Recetas() {
   );
 }
 
-/* ================= STYLES ================= */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 32, color: "#d63384" },
