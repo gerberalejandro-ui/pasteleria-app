@@ -5,7 +5,7 @@ export default function Admin() {
   const [user, setUser] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
 
-  // 🔐 TU EMAIL (CAMBIAR SI QUIERES)
+  // 🔐 TU EMAIL ADMIN
   const ADMIN_EMAIL = "gerber.alejandro@gmail.com";
 
   useEffect(() => {
@@ -27,8 +27,12 @@ export default function Admin() {
     if (data) setUsuarios(data);
   };
 
-  // 🔐 BLOQUEO TOTAL SI NO ES ADMIN
-  if (!user || user.email !== ADMIN_EMAIL) {
+  // 🔐 BLOQUEO SEGURO (MEJORADO)
+  const isAdmin =
+    user?.email?.toLowerCase().trim() ===
+    ADMIN_EMAIL.toLowerCase().trim();
+
+  if (!user || !isAdmin) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Acceso denegado</h2>
