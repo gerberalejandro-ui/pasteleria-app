@@ -135,13 +135,23 @@ export default function Recetas() {
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
-    await supabase.from("recetas").insert([
-      {
-        ...nuevaReceta,
+    const { error } = await supabase.from("recetas").insert([
+  {
+        nombre: nuevaReceta.nombre,
+        procedimiento: nuevaReceta.procedimiento,
+        tiempo_horas: Number(nuevaReceta.tiempo_horas || 0),
+        horas_luz: Number(nuevaReceta.horas_luz || 0),
+        ingredientes: nuevaReceta.ingredientes,
         costo: costoFinal,
         precio_final: precioFinal,
       },
     ]);
+
+    if (error) {
+      console.log(error);
+      alert("Error al guardar receta");
+      return;
+    }
 
     cargarDatos();
 
