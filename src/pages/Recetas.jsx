@@ -30,6 +30,7 @@ export default function Recetas() {
     cargarConfig();
   }, []);
 
+  /* ================= CONFIG COSTOS ================= */
   const cargarConfig = async () => {
     const { data } = await supabase.from("costo_config").select("*");
 
@@ -45,12 +46,23 @@ export default function Recetas() {
   };
 
   const guardarConfig = async () => {
-    await supabase.from("costo_config").upsert([
-      { clave: "costo_hora_hombre", valor: config.costo_hora_hombre },
-      { clave: "costo_luz_hora", valor: config.costo_luz_hora },
-    ]);
+    await supabase
+      .from("costo_config")
+      .update({
+        valor: config.costo_hora_hombre,
+      })
+      .eq("clave", "costo_hora_hombre");
+
+    await supabase
+      .from("costo_config")
+      .update({
+        valor: config.costo_luz_hora,
+      })
+      .eq("clave", "costo_luz_hora");
 
     alert("Configuración guardada 💾");
+
+    cargarConfig();
   };
 
   const cargarDatos = async () => {
@@ -61,25 +73,31 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
+  /* ================= UNIDADES ================= */
   const formatearUnidad = (unidad, cantidad) => {
     const c = Number(cantidad);
 
     if (unidad === "kg") return `${c} g`;
+
     if (unidad === "litro") return `${c} ml`;
 
     return `${c} ${unidad}`;
   };
 
+  /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
-    const insumo = insumos.find((i) => String(i.id) === String(insumoId));
+    const insumo = insumos.find(
+      (i) => String(i.id) === String(insumoId)
+    );
+
     if (!insumo || !cantidad) return;
 
     const c = Number(cantidad);
 
     const costo =
       insumo.unidad === "kg" || insumo.unidad === "litro"
-        ? (insumo.precio / 1000) * c
-        : insumo.precio * c;
+        ? (Number(insumo.precio) / 1000) * c
+        : Number(insumo.precio) * c;
 
     const ingrediente = {
       nombre: insumo.nombre,
@@ -88,7 +106,6 @@ export default function Recetas() {
       costo,
     };
 
-    // 🔥 FIX APLICADO SOLO AQUÍ
     setNuevaReceta((prev) => ({
       ...prev,
       ingredientes: [...prev.ingredientes, ingrediente],
@@ -101,6 +118,7 @@ export default function Recetas() {
   const calcularCostoIngredientes = () =>
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
+  /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
     const ingredientes = calcularCostoIngredientes();
 
@@ -148,10 +166,12 @@ export default function Recetas() {
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  /* ================= UI ================= */
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>🧾 Recetas</h1>
 
+      {/* CONFIG COSTOS */}
       <div style={styles.configBox}>
         <h3>⚙️ Configuración de costos</h3>
 
@@ -186,22 +206,28 @@ export default function Recetas() {
         </button>
       </div>
 
+      {/* TOP */}
       <div style={styles.topBar}>
-        <button onClick={() => setMostrarFormulario(!mostrarFormulario)}>
-          {mostrarFormulario ? "Cerrar" : "Nueva receta"}
+        <button
+          onClick={() => setMostrarFormulario(!mostrarFormulario)}
+          style={styles.btnPrimary}
+        >
+          ➕ {mostrarFormulario ? "Cerrar" : "Nueva receta"}
         </button>
 
         <input
+          style={styles.search}
           placeholder="🔎 Buscar receta..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          style={{ flex: 1 }}
         />
       </div>
 
+      {/* FORM */}
       {mostrarFormulario && (
         <div style={styles.card}>
           <input
+            style={styles.input}
             placeholder="🧾 Nombre"
             value={nuevaReceta.nombre}
             onChange={(e) =>
@@ -210,6 +236,7 @@ export default function Recetas() {
           />
 
           <textarea
+            style={styles.input}
             placeholder="📌 Procedimiento"
             value={nuevaReceta.procedimiento}
             onChange={(e) =>
@@ -218,8 +245,9 @@ export default function Recetas() {
           />
 
           <input
-            type="number"
+            style={styles.input}
             placeholder="⏱ Horas trabajo"
+            type="number"
             value={nuevaReceta.tiempo_horas}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
@@ -227,8 +255,9 @@ export default function Recetas() {
           />
 
           <input
-            type="number"
+            style={styles.input}
             placeholder="💡 Horas luz"
+            type="number"
             value={nuevaReceta.horas_luz}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, horas_luz: e.target.value })
@@ -236,8 +265,9 @@ export default function Recetas() {
           />
 
           <input
-            type="number"
+            style={styles.input}
             placeholder="📈 Margen %"
+            type="number"
             value={nuevaReceta.margen}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
@@ -258,8 +288,9 @@ export default function Recetas() {
           </select>
 
           <input
-            type="number"
+            style={styles.input}
             placeholder="Cantidad"
+            type="number"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
           />
@@ -274,6 +305,7 @@ export default function Recetas() {
         </div>
       )}
 
+      {/* LISTA */}
       <div style={styles.table}>
         {recetasFiltradas.map((r) => (
           <>
@@ -326,6 +358,7 @@ export default function Recetas() {
   );
 }
 
+/* ================= STYLES ================= */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 32, color: "#d63384" },
