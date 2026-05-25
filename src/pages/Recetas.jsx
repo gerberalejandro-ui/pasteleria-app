@@ -128,17 +128,28 @@ export default function Recetas() {
       return;
     }
 
-    const ingredientes = calcularCostoIngredientes();
+        const ingredientes = calcularCostoIngredientes();
 
-const manoObra =
-  Number(nuevaReceta.tiempo_horas || 0) *
-  Number(config.costo_hora_hombre || 0);
+        // traer config REAL desde supabase
+        const { data: configDB } = await supabase
+          .from("costo_config")
+          .select("*");
 
-const luz =
-  Number(nuevaReceta.horas_luz || 0) *
-  Number(config.costo_luz_hora || 0);
+        const cfg = {};
 
-    const costoFinal = ingredientes + manoObra + luz;
+        configDB.forEach((c) => {
+          cfg[c.clave] = Number(c.valor);
+        });
+
+        const manoObra =
+          Number(nuevaReceta.tiempo_horas || 0) *
+          Number(cfg.costo_hora_hombre || 0);
+
+        const luz =
+          Number(nuevaReceta.horas_luz || 0) *
+          Number(cfg.costo_luz_hora || 0);
+
+        const costoFinal = ingredientes + manoObra + luz;
 
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
