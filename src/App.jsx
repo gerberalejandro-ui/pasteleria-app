@@ -10,6 +10,7 @@ import Productos from "./pages/Productos";
 import DetalleProducto from "./pages/DetalleProducto";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Admin from "./pages/Admin";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -24,7 +25,7 @@ export default function App() {
       .from("perfiles")
       .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       setPerfil(null);
@@ -38,8 +39,8 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       const { data } = await supabase.auth.getSession();
-      const sessionUser = data.session?.user || null;
 
+      const sessionUser = data.session?.user || null;
       setUser(sessionUser);
 
       if (sessionUser) {
@@ -74,106 +75,69 @@ export default function App() {
   };
 
   if (loading || checkingPerfil) {
-    return (
-      <div style={{ padding: 30 }}>
-        Cargando...
-      </div>
-    );
+    return <div style={{ padding: 30 }}>Cargando...</div>;
   }
 
-  // ❌ LOGUEADO PERO NO APROBADO
+  // 🔐 usuario logueado pero NO aprobado
   if (user && perfil && perfil.aprobado === false) {
     return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-        }}
-      >
+      <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Usuario pendiente de aprobación</h2>
-        <p>Tu cuenta fue creada pero aún no fue habilitada por el administrador.</p>
+        <p>
+          Tu cuenta fue creada pero aún no fue habilitada por el administrador.
+        </p>
 
-        <button onClick={logout}>
-          Cerrar sesión
-        </button>
+        <button onClick={logout}>Cerrar sesión</button>
       </div>
     );
   }
+
+  // ✅ ÚNICA FUENTE DE VERDAD
+  const isAutorizado = user && perfil?.aprobado === true;
 
   return (
     <BrowserRouter>
       <div style={{ minHeight: "100vh", background: "#fff7f0" }}>
-        {user && perfil?.aprobado && (
-          <Navbar user={user} />
-        )}
+        {isAutorizado && <Navbar user={user} />}
 
         <Routes>
           {/* LOGIN */}
           <Route
             path="/login"
-            element={
-              user && perfil?.aprobado ? (
-                <Navigate to="/" />
-              ) : (
-                <Login />
-              )
-            }
+            element={isAutorizado ? <Navigate to="/" /> : <Login />}
           />
 
           {/* PROTEGIDAS */}
           <Route
             path="/"
-            element={
-              user && perfil?.aprobado ? (
-                <Insumos />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={isAutorizado ? <Insumos /> : <Navigate to="/login" />}
           />
 
           <Route
             path="/recetas"
-            element={
-              user && perfil?.aprobado ? (
-                <Recetas />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={isAutorizado ? <Recetas /> : <Navigate to="/login" />}
           />
 
           <Route
             path="/productos"
-            element={
-              user && perfil?.aprobado ? (
-                <Productos />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={isAutorizado ? <Productos /> : <Navigate to="/login" />}
           />
 
           <Route
             path="/producto/:id"
             element={
-              user && perfil?.aprobado ? (
-                <DetalleProducto />
-              ) : (
-                <Navigate to="/login" />
-              )
+              isAutorizado ? <DetalleProducto /> : <Navigate to="/login" />
             }
           />
 
           <Route
             path="/dashboard"
-            element={
-              user && perfil?.aprobado ? (
-                <Dashboard />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
+            element={isAutorizado ? <Dashboard /> : <Navigate to="/login" />}
+            
+          />
+          <Route
+            path="/admin"
+            element={isAutorizado ? <Admin /> : <Navigate to="/login" />}
           />
         </Routes>
       </div>

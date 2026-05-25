@@ -13,31 +13,38 @@ export default function Login() {
       });
 
     if (error) {
-      alert(error.message);
+      alert("Credenciales incorrectas");
       return;
     }
 
-    const user = data.user;
+    const user = data?.user;
 
-    // 🔐 buscar perfil del usuario
+    // 🚨 seguridad extra: si no hay usuario, cerrar sesión
+    if (!user) {
+      await supabase.auth.signOut();
+      alert("Error de autenticación");
+      return;
+    }
+
+    // 🔐 buscar perfil
     const { data: perfil, error: perfilError } =
       await supabase
         .from("perfiles")
         .select("aprobado")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-    // ❌ si no existe perfil
+    // ❌ sin perfil
     if (perfilError || !perfil) {
       await supabase.auth.signOut();
-      alert("Usuario sin perfil. Contactá al administrador.");
+      alert("Usuario no autorizado. Contactá al administrador.");
       return;
     }
 
-    // ❌ si no está aprobado
-    if (!perfil.aprobado) {
+    // ❌ no aprobado
+    if (perfil.aprobado !== true) {
       await supabase.auth.signOut();
-      alert("Tu usuario aún no fue aprobado por el administrador");
+      alert("Tu usuario aún no fue aprobado");
       return;
     }
 
@@ -56,9 +63,12 @@ export default function Login() {
       return;
     }
 
-    const user = data.user;
+    const user = data?.user;
 
-    if (!user) return;
+    if (!user) {
+      alert("Error al registrar usuario");
+      return;
+    }
 
     // 🔐 crear perfil pendiente
     const { error: perfilError } =
@@ -120,7 +130,6 @@ export default function Login() {
               borderRadius: 10,
               border: "1px solid #ccc",
             }}
-            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -129,14 +138,13 @@ export default function Login() {
         <div>
           <label>Contraseña</label>
           <input
+            type="password"
             style={{
               width: "100%",
               padding: 12,
               borderRadius: 10,
               border: "1px solid #ccc",
             }}
-            type="password"
-            placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
