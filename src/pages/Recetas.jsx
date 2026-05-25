@@ -130,13 +130,13 @@ export default function Recetas() {
 
     const ingredientes = calcularCostoIngredientes();
 
-    const manoObra =
-      Number(nuevaReceta.tiempo_horas || 0) *
-      Number(config.costo_hora_hombre);
+const manoObra =
+  Number(nuevaReceta.tiempo_horas || 0) *
+  Number(config.costo_hora_hombre || 0);
 
-    const luz =
-      Number(nuevaReceta.horas_luz || 0) *
-      Number(config.costo_luz_hora);
+const luz =
+  Number(nuevaReceta.horas_luz || 0) *
+  Number(config.costo_luz_hora || 0);
 
     const costoFinal = ingredientes + manoObra + luz;
 
