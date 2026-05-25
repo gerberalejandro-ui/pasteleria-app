@@ -10,7 +10,7 @@ export default function Recetas() {
 
   const [nuevaReceta, setNuevaReceta] = useState({
     nombre: "",
-    margen: 100,
+    margen: 30, // 👈 ahora editable claro
     procedimiento: "",
     tiempo_horas: "",
     valor_hora: "",
@@ -20,6 +20,12 @@ export default function Recetas() {
 
   const [insumoId, setInsumoId] = useState("");
   const [cantidad, setCantidad] = useState("");
+
+  /* =========================
+     ⚙️ COSTOS FIJOS CONFIGURABLES
+  ========================= */
+  const [costoHoraHombre, setCostoHoraHombre] = useState(1000);
+  const [costoLuzHora, setCostoLuzHora] = useState(200);
 
   useEffect(() => {
     cargarDatos();
@@ -34,13 +40,10 @@ export default function Recetas() {
   };
 
   /* =========================
-     🔥 UNIDADES CORREGIDAS REALMENTE BIEN
+     UNIDADES CORREGIDAS
   ========================= */
   const formatearUnidad = (unidad, cantidad) => {
     const cant = Number(cantidad);
-
-    // IMPORTANTE:
-    // NO multiplicar si ya estás cargando cantidad directa (evita 70000 g error)
 
     if (unidad === "kg") return `${cant} kg`;
     if (unidad === "litro") return `${cant} L`;
@@ -89,12 +92,17 @@ export default function Recetas() {
 
     const costoIngredientes = calcularCostoIngredientes();
 
-    const manoObra =
-      Number(nuevaReceta.tiempo_horas || 0) *
-      Number(nuevaReceta.valor_hora || 0);
+    const tiempo = Number(nuevaReceta.tiempo_horas || 0);
+
+    /* =========================
+       🔥 COSTOS CORREGIDOS
+    ========================= */
+    const manoObra = tiempo * costoHoraHombre;
+
+    const costoLuzTotal = tiempo * costoLuzHora;
 
     const costoFinal =
-      costoIngredientes + manoObra + Number(nuevaReceta.costo_luz || 0);
+      costoIngredientes + manoObra + costoLuzTotal;
 
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
@@ -104,9 +112,9 @@ export default function Recetas() {
         nombre: nuevaReceta.nombre,
         margen: Number(nuevaReceta.margen),
         procedimiento: nuevaReceta.procedimiento,
-        tiempo_horas: Number(nuevaReceta.tiempo_horas),
-        valor_hora: Number(nuevaReceta.valor_hora),
-        costo_luz: Number(nuevaReceta.costo_luz),
+        tiempo_horas: tiempo,
+        valor_hora: costoHoraHombre,
+        costo_luz: costoLuzHora,
         costo: costoFinal,
         precio_final: precioFinal,
         ingredientes: nuevaReceta.ingredientes,
@@ -124,7 +132,7 @@ export default function Recetas() {
 
     setNuevaReceta({
       nombre: "",
-      margen: 100,
+      margen: 30,
       procedimiento: "",
       tiempo_horas: "",
       valor_hora: "",
@@ -151,6 +159,29 @@ export default function Recetas() {
     <div style={styles.page}>
       <h1 style={styles.title}>📋 Recetas</h1>
 
+      {/* =========================
+         ⚙️ PANEL DE COSTOS FIJOS
+      ========================= */}
+      <div style={styles.card}>
+        <h3>⚙️ Configuración de costos</h3>
+
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Costo hora hombre"
+          value={costoHoraHombre}
+          onChange={(e) => setCostoHoraHombre(Number(e.target.value))}
+        />
+
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Costo luz por hora"
+          value={costoLuzHora}
+          onChange={(e) => setCostoLuzHora(Number(e.target.value))}
+        />
+      </div>
+
       <div style={styles.topBar}>
         <button
           style={styles.btnPrimary}
@@ -161,7 +192,7 @@ export default function Recetas() {
 
         <input
           style={styles.search}
-          placeholder="Buscar receta..."
+          placeholder="Buscar..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -200,23 +231,14 @@ export default function Recetas() {
             }
           />
 
+          {/* 🔥 MARGEN EDITABLE REAL */}
           <input
             style={styles.input}
             type="number"
-            placeholder="Valor hora"
-            value={nuevaReceta.valor_hora}
+            placeholder="Margen %"
+            value={nuevaReceta.margen}
             onChange={(e) =>
-              setNuevaReceta({ ...nuevaReceta, valor_hora: e.target.value })
-            }
-          />
-
-          <input
-            style={styles.input}
-            type="number"
-            placeholder="Costo luz"
-            value={nuevaReceta.costo_luz}
-            onChange={(e) =>
-              setNuevaReceta({ ...nuevaReceta, costo_luz: e.target.value })
+              setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
             }
           />
 
@@ -248,7 +270,7 @@ export default function Recetas() {
           <div style={{ marginTop: 10 }}>
             {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
-                <span><b>{i.nombre}</b></span>
+                <span>{i.nombre}</span>
                 <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                 <span>${i.costo.toFixed(2)}</span>
               </div>
@@ -264,44 +286,45 @@ export default function Recetas() {
       {/* LISTA */}
       <div style={styles.table}>
         {recetasFiltradas.map((r) => (
-          <div key={r.id}>
-            <div style={styles.row}>
-              <div><b>{r.nombre}</b></div>
-              <div>💰 Costo: ${Number(r.costo).toFixed(2)}</div>
-              <div>💲 Precio: ${Number(r.precio_final).toFixed(2)}</div>
-              <div>⏱ Horas: {r.tiempo_horas}</div>
+          <div key={r.id} style={styles.row}>
+            <div><b>{r.nombre}</b></div>
 
-              <div>
-                <button
-                  style={styles.btnSmall}
-                  onClick={() =>
-                    setRecetaExpandida(recetaExpandida === r.id ? null : r.id)
-                  }
-                >
-                  Ver
-                </button>
+            <div>💰 Costo: ${Number(r.costo).toFixed(2)}</div>
 
-                <button
-                  style={{ ...styles.btnSmall, background: "#dc3545" }}
-                  onClick={() => eliminarReceta(r.id)}
-                >
-                  Eliminar
-                </button>
-              </div>
+            <div>💲 Precio: ${Number(r.precio_final).toFixed(2)}</div>
+
+            <div>⏱ {r.tiempo_horas} hs</div>
+
+            <div>
+              <button
+                style={styles.btnSmall}
+                onClick={() =>
+                  setRecetaExpandida(recetaExpandida === r.id ? null : r.id)
+                }
+              >
+                Ver
+              </button>
+
+              <button
+                style={{ ...styles.btnSmall, background: "#dc3545" }}
+                onClick={() => eliminarReceta(r.id)}
+              >
+                Eliminar
+              </button>
             </div>
 
             {recetaExpandida === r.id && (
               <div style={styles.expand}>
                 <h2 style={{ color: "#d63384" }}>{r.nombre}</h2>
 
-                <h3>📌 Procedimiento</h3>
+                <h3>Procedimiento</h3>
                 <p>{r.procedimiento}</p>
 
-                <h3>🧾 Ingredientes</h3>
+                <h3>Ingredientes</h3>
 
                 {r.ingredientes?.map((i, index) => (
                   <div key={index} style={styles.rowIng}>
-                    <span><b>{i.nombre}</b></span>
+                    <span>{i.nombre}</span>
                     <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
                     <span>${Number(i.costo).toFixed(2)}</span>
                   </div>
@@ -315,7 +338,7 @@ export default function Recetas() {
   );
 }
 
-/* styles igual */
+/* styles iguales */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 34, color: "#d63384" },
@@ -328,6 +351,7 @@ const styles = {
     background: "white",
     padding: 12,
     borderRadius: 10,
+    gap: 10,
   },
   expand: { background: "#fff7f0", padding: 15, borderRadius: 10 },
   rowIng: {
