@@ -20,6 +20,7 @@ export default function Recetas() {
     tiempo_horas: "",
     horas_luz: "",
     ingredientes: [],
+    margen: 30,
   });
 
   const [insumoId, setInsumoId] = useState("");
@@ -106,6 +107,7 @@ export default function Recetas() {
       costo,
     };
 
+    // ✅ FIX
     setNuevaReceta((prev) => ({
       ...prev,
       ingredientes: [...prev.ingredientes, ingrediente],
@@ -120,30 +122,48 @@ export default function Recetas() {
 
   /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
+    // ✅ FIX
+    if (nuevaReceta.ingredientes.length === 0) {
+      alert("Agregá al menos un ingrediente");
+      return;
+    }
+
     const ingredientes = calcularCostoIngredientes();
 
     const manoObra =
       Number(nuevaReceta.tiempo_horas || 0) *
-      config.costo_hora_hombre;
+      Number(config.costo_hora_hombre);
 
     const luz =
       Number(nuevaReceta.horas_luz || 0) *
-      config.costo_luz_hora;
+      Number(config.costo_luz_hora);
 
     const costoFinal = ingredientes + manoObra + luz;
 
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
-    await supabase.from("recetas").insert([
+    // ✅ FIX
+    const { error } = await supabase.from("recetas").insert([
       {
-        ...nuevaReceta,
+        nombre: nuevaReceta.nombre,
+        procedimiento: nuevaReceta.procedimiento,
+        tiempo_horas: Number(nuevaReceta.tiempo_horas),
+        horas_luz: Number(nuevaReceta.horas_luz),
+        margen: Number(nuevaReceta.margen || 0),
+        ingredientes: nuevaReceta.ingredientes,
         costo: costoFinal,
         precio_final: precioFinal,
       },
     ]);
 
-    cargarDatos();
+    if (error) {
+      console.log(error);
+      alert("Error al guardar receta");
+      return;
+    }
+
+    await cargarDatos();
 
     setNuevaReceta({
       nombre: "",
@@ -280,6 +300,7 @@ export default function Recetas() {
             style={styles.input}
           >
             <option value="">➕ Insumo</option>
+
             {insumos.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nombre}
@@ -295,7 +316,12 @@ export default function Recetas() {
             onChange={(e) => setCantidad(e.target.value)}
           />
 
-          <button onClick={agregarIngrediente} style={styles.btnSecondary}>
+          {/* ✅ FIX */}
+          <button
+            type="button"
+            onClick={agregarIngrediente}
+            style={styles.btnSecondary}
+          >
             ➕ Agregar ingrediente
           </button>
 
