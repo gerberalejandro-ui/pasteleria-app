@@ -15,57 +15,53 @@ import Admin from "./pages/Admin";
 export default function App() {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
-  const [ready, setReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [checkingPerfil, setCheckingPerfil] = useState(false);
+
+  const isAdmin = user?.email === "gerber.alejandro@gmail.com";
+
+  const cargarPerfil = async (userId) => {
+    setCheckingPerfil(true);
+
+    const { data, error } = await supabase
+      .from("perfiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      setPerfil(null);
+    } else {
+      setPerfil(data);
+    }
+
+    setCheckingPerfil(false);
+  };
 
   useEffect(() => {
     const init = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
 
-        const sessionUser = data?.session?.user || null;
-        setUser(sessionUser);
+      const sessionUser = data.session?.user || null;
+      setUser(sessionUser);
 
-        // 🔥 PERFIL EN BACKGROUND (NO BLOQUEA LA APP)
-        if (sessionUser) {
-          supabase
-            .from("perfiles")
-            .select("*")
-            .eq("id", sessionUser.id)
-            .maybeSingle()
-            .then(({ data }) => {
-              setPerfil(data || null);
-            })
-            .catch((err) => {
-              console.log("Error perfil:", err);
-              setPerfil(null);
-            });
-        }
-      } catch (e) {
-        console.log("INIT ERROR:", e);
-        setUser(null);
-        setPerfil(null);
-      } finally {
-        setReady(true);
+      if (sessionUser) {
+        await cargarPerfil(sessionUser.id);
       }
+
+      setLoading(false);
     };
 
     init();
 
     const { data: listener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
+      supabase.auth.onAuthStateChange(async (_event, session) => {
         const sessionUser = session?.user || null;
+
         setUser(sessionUser);
 
         if (sessionUser) {
-          supabase
-            .from("perfiles")
-            .select("*")
-            .eq("id", sessionUser.id)
-            .maybeSingle()
-            .then(({ data }) => {
-              setPerfil(data || null);
-            })
-            .catch(() => setPerfil(null));
+          await cargarPerfil(sessionUser.id);
         } else {
           setPerfil(null);
         }
@@ -80,7 +76,7 @@ export default function App() {
     setPerfil(null);
   };
 
-  if (!ready) {
+  if (loading || checkingPerfil) {
     return <div style={{ padding: 30 }}>Cargando...</div>;
   }
 
@@ -98,7 +94,6 @@ export default function App() {
     );
   }
 
-  // ✅ ÚNICA FUENTE DE VERDAD
   const isAutorizado = user && perfil?.aprobado === true;
 
   return (
@@ -107,13 +102,11 @@ export default function App() {
         {isAutorizado && <Navbar user={user} />}
 
         <Routes>
-          {/* LOGIN */}
           <Route
             path="/login"
             element={isAutorizado ? <Navigate to="/" /> : <Login />}
           />
 
-          {/* PROTEGIDAS */}
           <Route
             path="/"
             element={isAutorizado ? <Insumos /> : <Navigate to="/login" />}
@@ -141,9 +134,12 @@ export default function App() {
             element={isAutorizado ? <Dashboard /> : <Navigate to="/login" />}
           />
 
+          {/* 👑 ADMIN AHORA VISIBLE */}
           <Route
             path="/admin"
-            element={isAutorizado ? <Admin /> : <Navigate to="/login" />}
+            element={
+              user ? <Admin /> : <Navigate to="/login" />
+            }
           />
         </Routes>
       </div>

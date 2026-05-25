@@ -4,8 +4,9 @@ import { supabase } from "../supabase";
 export default function Admin() {
   const [user, setUser] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🔐 TU EMAIL ADMIN
+  // 🔐 TU EMAIL DE ADMIN
   const ADMIN_EMAIL = "gerber.alejandro@gmail.com";
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export default function Admin() {
   const checkUser = async () => {
     const { data } = await supabase.auth.getUser();
     setUser(data.user);
+    setLoading(false);
   };
 
   const cargarUsuarios = async () => {
@@ -27,21 +29,7 @@ export default function Admin() {
     if (data) setUsuarios(data);
   };
 
-  // 🔐 BLOQUEO SEGURO (MEJORADO)
-  const isAdmin =
-    user?.email?.toLowerCase().trim() ===
-    ADMIN_EMAIL.toLowerCase().trim();
-
-  if (!user || !isAdmin) {
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <h2>Acceso denegado</h2>
-        <p>No tenés permisos para ver esta sección</p>
-      </div>
-    );
-  }
-
-  const toggleAprobado = async (id, estado) => {
+  const cambiarEstado = async (id, estado) => {
     await supabase
       .from("perfiles")
       .update({ aprobado: !estado })
@@ -50,49 +38,57 @@ export default function Admin() {
     cargarUsuarios();
   };
 
+  // 🔒 BLOQUEO SIMPLE DE ADMIN
+  if (!loading && (!user || user.email !== ADMIN_EMAIL)) {
+    return (
+      <div style={{ padding: 40, textAlign: "center" }}>
+        <h2>Acceso denegado</h2>
+        <p>No tenés permisos para ver esta sección</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: 30 }}>
-      <h1 style={{ color: "#d63384" }}>Panel Admin</h1>
+      <h1>Panel de Administración</h1>
 
-      <table style={{ width: "100%", marginTop: 20 }}>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
+      <p>Gestionar usuarios registrados</p>
 
-        <tbody>
-          {usuarios.map((u) => (
-            <tr key={u.id}>
-              <td>{u.email}</td>
-
-              <td>
+      <div style={{ marginTop: 20 }}>
+        {usuarios.map((u) => (
+          <div
+            key={u.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: 10,
+              borderBottom: "1px solid #ddd",
+            }}
+          >
+            <div>
+              <strong>{u.email}</strong>
+              <p>
+                Estado:{" "}
                 {u.aprobado ? "🟢 Aprobado" : "🟡 Pendiente"}
-              </td>
+              </p>
+            </div>
 
-              <td>
-                <button
-                  onClick={() =>
-                    toggleAprobado(u.id, u.aprobado)
-                  }
-                  style={{
-                    padding: 8,
-                    border: "none",
-                    borderRadius: 8,
-                    background: u.aprobado ? "#dc3545" : "#28a745",
-                    color: "white",
-                    cursor: "pointer",
-                  }}
-                >
-                  {u.aprobado ? "Bloquear" : "Aprobar"}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            <button
+              onClick={() => cambiarEstado(u.id, u.aprobado)}
+              style={{
+                padding: 8,
+                border: "none",
+                borderRadius: 8,
+                background: u.aprobado ? "#dc3545" : "#28a745",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              {u.aprobado ? "Bloquear" : "Aprobar"}
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

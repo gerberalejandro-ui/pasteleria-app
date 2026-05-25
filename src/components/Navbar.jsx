@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import { supabase } from "../supabase";
 
 export default function Navbar({ user }) {
-const logout = async () => {
-  await supabase.auth.signOut();
-};
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div
@@ -55,8 +55,13 @@ const logout = async () => {
           <Link to="/recetas" style={linkStyle}>
             Recetas
           </Link>
-          
-      
+
+          {/* 👑 ADMIN SOLO VISIBLE PARA VOS */}
+          {user?.email === "gerber.alejandro@gmail.com" && (
+            <Link to="/admin" style={linkStyle}>
+              Admin
+            </Link>
+          )}
         </div>
 
         {/* USUARIO */}
