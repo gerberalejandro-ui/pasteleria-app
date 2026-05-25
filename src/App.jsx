@@ -18,22 +18,30 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [checkingPerfil, setCheckingPerfil] = useState(false);
 
+  // 🔥 SOLO ESTA FUNCIÓN FUE MEJORADA
   const cargarPerfil = async (userId) => {
     setCheckingPerfil(true);
 
-    const { data, error } = await supabase
-      .from("perfiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("perfiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
 
-    if (error || !data) {
+      if (error) {
+        console.log("Error cargando perfil:", error);
+        setPerfil(null);
+        return;
+      }
+
+      setPerfil(data || null);
+    } catch (err) {
+      console.log("Exception perfil:", err);
       setPerfil(null);
-    } else {
-      setPerfil(data);
+    } finally {
+      setCheckingPerfil(false);
     }
-
-    setCheckingPerfil(false);
   };
 
   useEffect(() => {
@@ -79,7 +87,7 @@ export default function App() {
   }
 
   // 🔐 usuario logueado pero NO aprobado
-  if (user && perfil && perfil.aprobado === false) {
+  if (user && perfil?.aprobado === false) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Usuario pendiente de aprobación</h2>
@@ -133,8 +141,8 @@ export default function App() {
           <Route
             path="/dashboard"
             element={isAutorizado ? <Dashboard /> : <Navigate to="/login" />}
-            
           />
+
           <Route
             path="/admin"
             element={isAutorizado ? <Admin /> : <Navigate to="/login" />}
