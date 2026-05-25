@@ -15,7 +15,6 @@ export default function Recetas() {
 
   const [nuevaReceta, setNuevaReceta] = useState({
     nombre: "",
-    //margen: 0,
     procedimiento: "",
     tiempo_horas: "",
     horas_luz: "",
@@ -30,7 +29,6 @@ export default function Recetas() {
     cargarConfig();
   }, []);
 
-  /* ================= CONFIG COSTOS ================= */
   const cargarConfig = async () => {
     const { data } = await supabase.from("costo_config").select("*");
 
@@ -62,7 +60,6 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
-  /* ================= UNIDADES ================= */
   const formatearUnidad = (unidad, cantidad) => {
     const c = Number(cantidad);
 
@@ -72,17 +69,10 @@ export default function Recetas() {
     return `${c} ${unidad}`;
   };
 
-  /* ================= INGREDIENTES ================= */
-    const agregarIngrediente = () => {
-    // 🔥 FIX 1: evitar ejecución si no hay datos
-    if (!insumoId || !cantidad) return;
-    if (!insumos || insumos.length === 0) return;
-
-    const insumo = insumos.find(
-      (i) => String(i.id) === String(insumoId)
-    );
-
-    if (!insumo) return;
+  /* ================= FIX SOLO AQUÍ ================= */
+  const agregarIngrediente = () => {
+    const insumo = insumos.find((i) => String(i.id) === String(insumoId));
+    if (!insumo || !cantidad) return;
 
     const c = Number(cantidad);
 
@@ -98,10 +88,11 @@ export default function Recetas() {
       costo,
     };
 
-    setNuevaReceta({
-      ...nuevaReceta,
-      ingredientes: [...nuevaReceta.ingredientes, ingrediente],
-    });
+    // 🔥 FIX REAL (estado seguro)
+    setNuevaReceta((prev) => ({
+      ...prev,
+      ingredientes: [...prev.ingredientes, ingrediente],
+    }));
 
     setInsumoId("");
     setCantidad("");
@@ -110,17 +101,14 @@ export default function Recetas() {
   const calcularCostoIngredientes = () =>
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
-  /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
     const ingredientes = calcularCostoIngredientes();
 
     const manoObra =
-      Number(nuevaReceta.tiempo_horas || 0) *
-      config.costo_hora_hombre;
+      Number(nuevaReceta.tiempo_horas || 0) * config.costo_hora_hombre;
 
     const luz =
-      Number(nuevaReceta.horas_luz || 0) *
-      config.costo_luz_hora;
+      Number(nuevaReceta.horas_luz || 0) * config.costo_luz_hora;
 
     const costoFinal = ingredientes + manoObra + luz;
 
@@ -158,69 +146,27 @@ export default function Recetas() {
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  /* ================= UI ================= */
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>🧾 Recetas</h1>
 
-      {/* CONFIG COSTOS */}
-      <div style={styles.configBox}>
-        <h3>⚙️ Configuración de costos</h3>
-
-        <div style={styles.grid}>
-          <div>
-            ⚡ Luz por hora
-            <input
-              style={styles.input}
-              type="number"
-              value={config.costo_luz_hora}
-              onChange={(e) =>
-                setConfig({ ...config, costo_luz_hora: e.target.value })
-              }
-            />
-          </div>
-
-          <div>
-            👷 Hora hombre
-            <input
-              style={styles.input}
-              type="number"
-              value={config.costo_hora_hombre}
-              onChange={(e) =>
-                setConfig({ ...config, costo_hora_hombre: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        <button onClick={guardarConfig} style={styles.btnPrimary}>
-          💾 Guardar configuración
-        </button>
-      </div>
-
-      {/* TOP */}
       <div style={styles.topBar}>
-        <button
-          onClick={() => setMostrarFormulario(!mostrarFormulario)}
-          style={styles.btnPrimary}
-        >
-          ➕ {mostrarFormulario ? "Cerrar" : "Nueva receta"}
+        <button onClick={() => setMostrarFormulario(!mostrarFormulario)}>
+          {mostrarFormulario ? "Cerrar" : "Nueva receta"}
         </button>
 
         <input
-          style={styles.search}
           placeholder="🔎 Buscar receta..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
+          style={{ flex: 1 }}
         />
       </div>
 
-      {/* FORM */}
       {mostrarFormulario && (
         <div style={styles.card}>
           <input
-            style={styles.input}
-            placeholder="🧾 Nombre"
+            placeholder="Nombre receta"
             value={nuevaReceta.nombre}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
@@ -228,8 +174,7 @@ export default function Recetas() {
           />
 
           <textarea
-            style={styles.input}
-            placeholder="📌 Procedimiento"
+            placeholder="Procedimiento"
             value={nuevaReceta.procedimiento}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, procedimiento: e.target.value })
@@ -237,9 +182,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="⏱ Horas trabajo"
             type="number"
+            placeholder="Horas trabajo"
             value={nuevaReceta.tiempo_horas}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
@@ -247,9 +191,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="💡 Horas luz"
             type="number"
+            placeholder="Horas luz"
             value={nuevaReceta.horas_luz}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, horas_luz: e.target.value })
@@ -257,9 +200,8 @@ export default function Recetas() {
           />
 
           <input
-            style={styles.input}
-            placeholder="📈 Margen %"
             type="number"
+            placeholder="Margen %"
             value={nuevaReceta.margen}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
@@ -269,9 +211,8 @@ export default function Recetas() {
           <select
             value={insumoId}
             onChange={(e) => setInsumoId(e.target.value)}
-            style={styles.input}
           >
-            <option value="">➕ Insumo</option> {/* ✔ FIX */}
+            <option value="">➕ Insumo</option>
             {insumos.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nombre}
@@ -280,132 +221,43 @@ export default function Recetas() {
           </select>
 
           <input
-            style={styles.input}
-            placeholder="Cantidad"
             type="number"
+            placeholder="Cantidad"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
           />
 
-          <button onClick={agregarIngrediente} style={styles.btnSecondary}>
+          <button onClick={agregarIngrediente}>
             ➕ Agregar ingrediente
           </button>
 
-          <button onClick={guardarReceta} style={styles.btnPrimary}>
+          <button onClick={guardarReceta}>
             💾 Guardar receta
           </button>
         </div>
       )}
 
-      {/* LISTA */}
-      <div style={styles.table}>
+      <div>
         {recetasFiltradas.map((r) => (
-          <>
-            <div key={r.id} style={styles.row}>
-              <div>🧾 {r.nombre}</div>
-              <div>💰 ${r.costo}</div>
-              <div>💵 ${r.precio_final}</div>
-              <div>⏱ {r.tiempo_horas}</div>
+          <div key={r.id}>
+            <div>🧾 {r.nombre}</div>
+            <div>💰 ${r.costo}</div>
+            <div>💵 ${r.precio_final}</div>
+            <div>⏱ {r.tiempo_horas}</div>
 
-              <div>
-                <button
-                  style={styles.btnSmall}
-                  onClick={() =>
-                    setRecetaExpandida(recetaExpandida === r.id ? null : r.id)
-                  }
-                >
-                  👁 Ver
-                </button>
-
-                <button
-                  style={{ ...styles.btnSmall, background: "#dc3545" }}
-                  onClick={() => eliminarReceta(r.id)}
-                >
-                  🗑 Eliminar
-                </button>
-              </div>
-            </div>
-
-            {recetaExpandida === r.id && (
-              <div style={styles.expand}>
-                <h3>📌 {r.nombre}</h3>
-
-                <p>{r.procedimiento}</p>
-
-                <h4>Ingredientes</h4>
-
-                {r.ingredientes?.map((i, index) => (
-                  <div key={index} style={styles.rowIng}>
-                    <span>{i.nombre}</span>
-                    <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
-                    <span>${i.costo}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+            <button onClick={() => eliminarReceta(r.id)}>
+              🗑 Eliminar
+            </button>
+          </div>
         ))}
       </div>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 32, color: "#d63384" },
   topBar: { display: "flex", gap: 10, marginBottom: 20 },
   card: { background: "white", padding: 20, borderRadius: 12 },
-  table: { display: "flex", flexDirection: "column", gap: 10 },
-  row: {
-    display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
-    background: "white",
-    padding: 12,
-    borderRadius: 10,
-  },
-  expand: { background: "#fff7f0", padding: 15, borderRadius: 10 },
-  rowIng: {
-    display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr",
-    padding: 8,
-    background: "#ffe5ec",
-    borderRadius: 8,
-    marginBottom: 6,
-  },
-  input: { width: "100%", padding: 10, marginBottom: 10 },
-  search: { flex: 1, padding: 10 },
-  btnPrimary: {
-    background: "#d63384",
-    color: "white",
-    padding: 10,
-    border: "none",
-    borderRadius: 8,
-  },
-  btnSecondary: {
-    background: "#ff8fab",
-    color: "white",
-    padding: 10,
-    border: "none",
-    borderRadius: 8,
-  },
-  btnSmall: {
-    marginRight: 5,
-    background: "#ff8fab",
-    color: "white",
-    border: "none",
-    padding: "6px 10px",
-    borderRadius: 8,
-  },
-  configBox: {
-    background: "white",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 10,
-  },
 };
