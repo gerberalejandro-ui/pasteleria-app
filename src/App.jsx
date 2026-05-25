@@ -15,50 +15,35 @@ import Admin from "./pages/Admin";
 export default function App() {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [checkingPerfil, setCheckingPerfil] = useState(false);
-
-  // 🔥 SOLO ESTA FUNCIÓN FUE MEJORADA
-  const cargarPerfil = async (userId) => {
-    setCheckingPerfil(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("perfiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.log("Error cargando perfil:", error);
-        setPerfil(null);
-        return;
-      }
-
-      setPerfil(data || null);
-    } catch (err) {
-      console.log("Exception perfil:", err);
-      setPerfil(null);
-    } finally {
-      setCheckingPerfil(false);
-    }
-  };
+  const [init, setInit] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
+    const initApp = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
 
-      const sessionUser = data.session?.user || null;
-      setUser(sessionUser);
+        const sessionUser = data?.session?.user || null;
+        setUser(sessionUser);
 
-      if (sessionUser) {
-        await cargarPerfil(sessionUser.id);
+        if (sessionUser) {
+          const { data: perfilData } = await supabase
+            .from("perfiles")
+            .select("*")
+            .eq("id", sessionUser.id)
+            .maybeSingle();
+
+          setPerfil(perfilData || null);
+        }
+      } catch (e) {
+        console.log("INIT ERROR:", e);
+        setPerfil(null);
+        setUser(null);
+      } finally {
+        setInit(true);
       }
-
-      setLoading(false);
     };
 
-    init();
+    initApp();
 
     const { data: listener } =
       supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -67,7 +52,13 @@ export default function App() {
         setUser(sessionUser);
 
         if (sessionUser) {
-          await cargarPerfil(sessionUser.id);
+          const { data: perfilData } = await supabase
+            .from("perfiles")
+            .select("*")
+            .eq("id", sessionUser.id)
+            .maybeSingle();
+
+          setPerfil(perfilData || null);
         } else {
           setPerfil(null);
         }
@@ -82,12 +73,12 @@ export default function App() {
     setPerfil(null);
   };
 
-  if (loading || checkingPerfil) {
+  if (!init) {
     return <div style={{ padding: 30 }}>Cargando...</div>;
   }
 
   // 🔐 usuario logueado pero NO aprobado
-  if (user && perfil?.aprobado === false) {
+  if (user && perfil && perfil.aprobado === false) {
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <h2>Usuario pendiente de aprobación</h2>
@@ -100,7 +91,7 @@ export default function App() {
     );
   }
 
-  // ✅ ÚNICA FUENTE DE VERDAD
+  // ✅ estado único de autorización
   const isAutorizado = user && perfil?.aprobado === true;
 
   return (
