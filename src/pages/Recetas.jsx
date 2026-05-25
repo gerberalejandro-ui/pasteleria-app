@@ -132,34 +132,31 @@ export default function Recetas() {
 
   return (
     <div style={styles.page}>
-      
-      <div style={styles.header}>
-        <h1 style={styles.title}>Recetas</h1>
+      <h1 style={styles.title}>Recetas</h1>
 
-        <div style={styles.actions}>
-          <button
-            onClick={() => setMostrarFormulario(!mostrarFormulario)}
-            style={styles.btnPrimary}
-          >
-            {mostrarFormulario ? "Cerrar formulario" : "Nueva receta"}
-          </button>
+      <div style={styles.topBar}>
+        <button
+          style={styles.btnPrimary}
+          onClick={() => setMostrarFormulario(!mostrarFormulario)}
+        >
+          {mostrarFormulario ? "Cerrar" : "Nueva receta"}
+        </button>
 
-          <input
-            style={styles.search}
-            placeholder="Buscar receta..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </div>
+        <input
+          style={styles.search}
+          placeholder="Buscar..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
       </div>
 
       {mostrarFormulario && (
         <div style={styles.card}>
-          <h2 style={styles.subtitle}>Nueva receta</h2>
+          <h3>Nueva receta</h3>
 
           <input
             style={styles.input}
-            placeholder="Nombre receta"
+            placeholder="Nombre"
             value={nuevaReceta.nombre}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
@@ -167,7 +164,7 @@ export default function Recetas() {
           />
 
           <textarea
-            style={{ ...styles.input, minHeight: 120 }}
+            style={styles.input}
             placeholder="Procedimiento"
             value={nuevaReceta.procedimiento}
             onChange={(e) =>
@@ -175,202 +172,167 @@ export default function Recetas() {
             }
           />
 
-          <div style={styles.grid}>
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Horas"
-              value={nuevaReceta.tiempo_horas}
-              onChange={(e) =>
-                setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
-              }
-            />
-
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Valor hora"
-              value={nuevaReceta.valor_hora}
-              onChange={(e) =>
-                setNuevaReceta({ ...nuevaReceta, valor_hora: e.target.value })
-              }
-            />
-
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Costo luz"
-              value={nuevaReceta.costo_luz}
-              onChange={(e) =>
-                setNuevaReceta({ ...nuevaReceta, costo_luz: e.target.value })
-              }
-            />
-
-            <input
-              style={styles.input}
-              type="number"
-              placeholder="Margen %"
-              value={nuevaReceta.margen}
-              onChange={(e) =>
-                setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
-              }
-            />
-          </div>
-
           <button style={styles.btnSecondary} onClick={agregarIngrediente}>
             Agregar ingrediente
           </button>
 
-          <h3 style={styles.sectionTitle}>Ingredientes</h3>
+          <h4>Ingredientes</h4>
 
-          {nuevaReceta.ingredientes.map((i, index) => (
-            <div key={index} style={styles.ingredient}>
-              <b>{i.nombre}</b>
-              <span>{i.cantidad} {i.unidad}</span>
-              <span>${Number(i.costo).toFixed(2)}</span>
-            </div>
-          ))}
+          <div style={styles.tableIngredients}>
+            {nuevaReceta.ingredientes.map((i, index) => (
+              <div key={index} style={styles.rowIng}>
+                <span>{i.nombre}</span>
+                <span>{i.cantidad}</span>
+                <span>{i.unidad}</span>
+                <span>${i.costo.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
 
           <button style={styles.btnPrimary} onClick={guardarReceta}>
-            Guardar receta
+            Guardar
           </button>
         </div>
       )}
 
-      <div style={styles.tableCard}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th>Receta</th>
-              <th>Costo</th>
-              <th>Precio</th>
-              <th>Horas</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
+      <div style={styles.table}>
+        {recetasFiltradas.map((r) => (
+          <>
+            <div style={styles.row}>
+              <div>{r.nombre}</div>
+              <div>${Number(r.costo).toFixed(2)}</div>
+              <div>${Number(r.precio_final).toFixed(2)}</div>
+              <div>{r.tiempo_horas}</div>
 
-          <tbody>
-            {recetasFiltradas.map((r) => (
-              <>
-                <tr key={r.id}>
-                  <td>{r.nombre}</td>
-                  <td>${Number(r.costo).toFixed(2)}</td>
-                  <td>${Number(r.precio_final).toFixed(2)}</td>
-                  <td>{r.tiempo_horas}</td>
-                  <td>
-                    <button style={styles.btnSmall}>
-                      Ver
-                    </button>
+              <div>
+                <button
+                  style={styles.btnSmall}
+                  onClick={() =>
+                    setRecetaExpandida(recetaExpandida === r.id ? null : r.id)
+                  }
+                >
+                  Ver
+                </button>
 
-                    <button
-                      style={{ ...styles.btnSmall, background: "#dc3545" }}
-                      onClick={() => eliminarReceta(r.id)}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              </>
-            ))}
-          </tbody>
-        </table>
+                <button
+                  style={{ ...styles.btnSmall, background: "#dc3545" }}
+                  onClick={() => eliminarReceta(r.id)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+
+            {recetaExpandida === r.id && (
+              <div style={styles.expand}>
+                <h3>Procedimiento</h3>
+                <p>{r.procedimiento}</p>
+
+                <h3>Ingredientes</h3>
+
+                <div style={styles.tableIngredients}>
+                  {r.ingredientes?.map((i, index) => (
+                    <div key={index} style={styles.rowIng}>
+                      <span>{i.nombre}</span>
+                      <span>{i.cantidad}</span>
+                      <span>{i.unidad}</span>
+                      <span>${Number(i.costo).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p><b>Costo:</b> ${r.costo}</p>
+                <p><b>Precio:</b> ${r.precio_final}</p>
+                <p><b>Margen:</b> {r.margen}%</p>
+              </div>
+            )}
+          </>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
+/* ===== ESTILOS ===== */
 
 const styles = {
   page: {
     padding: 20,
     background: "#f6f7fb",
     minHeight: "100vh",
-    fontFamily: "Arial",
-  },
-  header: {
-    marginBottom: 20,
   },
   title: {
     fontSize: 34,
     color: "#d63384",
   },
-  actions: {
+  topBar: {
     display: "flex",
     gap: 10,
-    flexWrap: "wrap",
+    marginBottom: 20,
   },
   card: {
     background: "white",
     padding: 20,
-    borderRadius: 16,
-    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+    borderRadius: 12,
     marginBottom: 20,
   },
-  tableCard: {
+  table: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+  },
+  row: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+    padding: 12,
     background: "white",
-    borderRadius: 16,
-    overflow: "hidden",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.08)",
+    borderRadius: 10,
+  },
+  expand: {
+    background: "#fff7f0",
+    padding: 15,
+    borderRadius: 10,
+  },
+  tableIngredients: {
+    display: "grid",
+    gap: 6,
+  },
+  rowIng: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr 1fr 1fr",
+    background: "#ffe5ec",
+    padding: 8,
+    borderRadius: 8,
   },
   input: {
     width: "100%",
-    padding: 12,
-    borderRadius: 10,
-    border: "1px solid #ddd",
+    padding: 10,
     marginBottom: 10,
   },
   search: {
     flex: 1,
-    padding: 12,
-    borderRadius: 10,
-    border: "1px solid #ddd",
+    padding: 10,
   },
   btnPrimary: {
     background: "#d63384",
     color: "white",
-    padding: 12,
+    padding: 10,
     border: "none",
-    borderRadius: 10,
-    cursor: "pointer",
+    borderRadius: 8,
   },
   btnSecondary: {
     background: "#ff8fab",
     color: "white",
-    padding: 12,
+    padding: 10,
     border: "none",
-    borderRadius: 10,
-    cursor: "pointer",
-    marginTop: 10,
+    borderRadius: 8,
   },
   btnSmall: {
-    padding: "6px 10px",
     marginRight: 5,
-    borderRadius: 8,
-    border: "none",
     background: "#ff8fab",
     color: "white",
-    cursor: "pointer",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 10,
-  },
-  ingredient: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: 10,
-    background: "#ffe5ec",
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    marginTop: 15,
-    color: "#d63384",
+    border: "none",
+    padding: "6px 10px",
+    borderRadius: 8,
   },
 };
