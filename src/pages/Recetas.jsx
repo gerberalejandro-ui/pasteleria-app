@@ -30,20 +30,28 @@ export default function Recetas() {
     cargarConfig();
   }, []);
 
+  /* ================= CONFIG COSTOS ================= */
   const cargarConfig = async () => {
     const { data } = await supabase.from("costo_config").select("*");
 
     if (data) {
       const cfg = {};
-      data.forEach((c) => {
-        cfg[c.clave] = Number(c.valor);
-      });
+      data.forEach((c) => (cfg[c.clave] = Number(c.valor)));
 
       setConfig({
         costo_hora_hombre: cfg.costo_hora_hombre || 0,
         costo_luz_hora: cfg.costo_luz_hora || 0,
       });
     }
+  };
+
+  const guardarConfig = async () => {
+    await supabase.from("costo_config").upsert([
+      { clave: "costo_hora_hombre", valor: config.costo_hora_hombre },
+      { clave: "costo_luz_hora", valor: config.costo_luz_hora },
+    ]);
+
+    alert("Configuración guardada 💾");
   };
 
   const cargarDatos = async () => {
@@ -54,31 +62,32 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
-  /* ================= UNIDADES CORREGIDAS ================= */
+  /* ================= UNIDADES ================= */
   const formatearUnidad = (unidad, cantidad) => {
-    const cant = Number(cantidad);
+    const c = Number(cantidad);
 
-    if (unidad === "kg") return `${cant} g`;
-    if (unidad === "litro") return `${cant} ml`;
+    if (unidad === "kg") return `${c} g`;
+    if (unidad === "litro") return `${c} ml`;
 
-    return `${cant} ${unidad}`;
+    return `${c} ${unidad}`;
   };
 
+  /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
     const insumo = insumos.find((i) => i.id === parseInt(insumoId));
     if (!insumo || !cantidad) return;
 
-    const cant = Number(cantidad);
+    const c = Number(cantidad);
 
-    let costo =
+    const costo =
       insumo.unidad === "kg" || insumo.unidad === "litro"
-        ? (insumo.precio / 1000) * cant
-        : insumo.precio * cant;
+        ? (insumo.precio / 1000) * c
+        : insumo.precio * c;
 
     const ingrediente = {
       nombre: insumo.nombre,
       unidad: insumo.unidad,
-      cantidad: cant,
+      cantidad: c,
       costo,
     };
 
@@ -92,18 +101,21 @@ export default function Recetas() {
   };
 
   const calcularCostoIngredientes = () =>
-    nuevaReceta.ingredientes.reduce((acc, i) => acc + i.costo, 0);
+    nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
+  /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
-    const costoIngredientes = calcularCostoIngredientes();
+    const ingredientes = calcularCostoIngredientes();
 
     const manoObra =
-      Number(nuevaReceta.tiempo_horas || 0) * config.costo_hora_hombre;
+      Number(nuevaReceta.tiempo_horas || 0) *
+      config.costo_hora_hombre;
 
-    const costoLuz =
-      Number(nuevaReceta.horas_luz || 0) * config.costo_luz_hora;
+    const luz =
+      Number(nuevaReceta.horas_luz || 0) *
+      config.costo_luz_hora;
 
-    const costoFinal = costoIngredientes + manoObra + costoLuz;
+    const costoFinal = ingredientes + manoObra + luz;
 
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
@@ -139,18 +151,58 @@ export default function Recetas() {
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  /* ================= UI ================= */
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>Recetas</h1>
+      <h1 style={styles.title}>🧾 Recetas</h1>
 
+      {/* CONFIG COSTOS */}
+      <div style={styles.configBox}>
+        <h3>⚙️ Configuración de costos</h3>
+
+        <div style={styles.grid}>
+          <div>
+            ⚡ Luz por hora
+            <input
+              style={styles.input}
+              type="number"
+              value={config.costo_luz_hora}
+              onChange={(e) =>
+                setConfig({ ...config, costo_luz_hora: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            👷 Hora hombre
+            <input
+              style={styles.input}
+              type="number"
+              value={config.costo_hora_hombre}
+              onChange={(e) =>
+                setConfig({ ...config, costo_hora_hombre: e.target.value })
+              }
+            />
+          </div>
+        </div>
+
+        <button onClick={guardarConfig} style={styles.btnPrimary}>
+          💾 Guardar configuración
+        </button>
+      </div>
+
+      {/* TOP */}
       <div style={styles.topBar}>
-        <button onClick={() => setMostrarFormulario(!mostrarFormulario)} style={styles.btnPrimary}>
-          {mostrarFormulario ? "Cerrar" : "Nueva receta"}
+        <button
+          onClick={() => setMostrarFormulario(!mostrarFormulario)}
+          style={styles.btnPrimary}
+        >
+          ➕ {mostrarFormulario ? "Cerrar" : "Nueva receta"}
         </button>
 
         <input
           style={styles.search}
-          placeholder="Buscar..."
+          placeholder="🔎 Buscar receta..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
@@ -161,14 +213,16 @@ export default function Recetas() {
         <div style={styles.card}>
           <input
             style={styles.input}
-            placeholder="Nombre"
+            placeholder="🧾 Nombre"
             value={nuevaReceta.nombre}
-            onChange={(e) => setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
+            }
           />
 
           <textarea
             style={styles.input}
-            placeholder="Procedimiento"
+            placeholder="📌 Procedimiento"
             value={nuevaReceta.procedimiento}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, procedimiento: e.target.value })
@@ -177,8 +231,8 @@ export default function Recetas() {
 
           <input
             style={styles.input}
+            placeholder="⏱ Horas trabajo"
             type="number"
-            placeholder="Horas trabajo"
             value={nuevaReceta.tiempo_horas}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
@@ -187,8 +241,8 @@ export default function Recetas() {
 
           <input
             style={styles.input}
+            placeholder="💡 Horas luz"
             type="number"
-            placeholder="Horas luz"
             value={nuevaReceta.horas_luz}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, horas_luz: e.target.value })
@@ -197,17 +251,20 @@ export default function Recetas() {
 
           <input
             style={styles.input}
+            placeholder="📈 Margen %"
             type="number"
-            placeholder="Margen %"
             value={nuevaReceta.margen}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
             }
           />
 
-          {/* ingredientes */}
-          <select value={insumoId} onChange={(e) => setInsumoId(e.target.value)} style={styles.input}>
-            <option>Seleccionar insumo</option>
+          <select
+            value={insumoId}
+            onChange={(e) => setInsumoId(e.target.value)}
+            style={styles.input}
+          >
+            <option>➕ Insumo</option>
             {insumos.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.nombre}
@@ -224,11 +281,11 @@ export default function Recetas() {
           />
 
           <button onClick={agregarIngrediente} style={styles.btnSecondary}>
-            Agregar ingrediente
+            ➕ Agregar ingrediente
           </button>
 
           <button onClick={guardarReceta} style={styles.btnPrimary}>
-            Guardar receta
+            💾 Guardar receta
           </button>
         </div>
       )}
@@ -238,10 +295,10 @@ export default function Recetas() {
         {recetasFiltradas.map((r) => (
           <>
             <div key={r.id} style={styles.row}>
-              <div><b>Receta:</b> {r.nombre}</div>
-              <div><b>Costo:</b> ${r.costo}</div>
-              <div><b>Precio:</b> ${r.precio_final}</div>
-              <div><b>Horas:</b> {r.tiempo_horas}</div>
+              <div>🧾 {r.nombre}</div>
+              <div>💰 ${r.costo}</div>
+              <div>💵 ${r.precio_final}</div>
+              <div>⏱ {r.tiempo_horas}</div>
 
               <div>
                 <button
@@ -250,21 +307,21 @@ export default function Recetas() {
                     setRecetaExpandida(recetaExpandida === r.id ? null : r.id)
                   }
                 >
-                  Ver
+                  👁 Ver
                 </button>
 
                 <button
                   style={{ ...styles.btnSmall, background: "#dc3545" }}
                   onClick={() => eliminarReceta(r.id)}
                 >
-                  Eliminar
+                  🗑 Eliminar
                 </button>
               </div>
             </div>
 
             {recetaExpandida === r.id && (
               <div style={styles.expand}>
-                <h3>{r.nombre}</h3>
+                <h3>📌 {r.nombre}</h3>
 
                 <p>{r.procedimiento}</p>
 
@@ -286,7 +343,7 @@ export default function Recetas() {
   );
 }
 
-/* STYLES (igual base pero mejor layout) */
+/* ================= STYLES ================= */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 32, color: "#d63384" },
@@ -299,20 +356,15 @@ const styles = {
     background: "white",
     padding: 12,
     borderRadius: 10,
-    alignItems: "center",
   },
-  expand: {
-    background: "#fff7f0",
-    padding: 15,
-    borderRadius: 10,
-  },
+  expand: { background: "#fff7f0", padding: 15, borderRadius: 10 },
   rowIng: {
     display: "grid",
     gridTemplateColumns: "2fr 1fr 1fr",
-    background: "#ffe5ec",
     padding: 8,
-    marginBottom: 5,
+    background: "#ffe5ec",
     borderRadius: 8,
+    marginBottom: 6,
   },
   input: { width: "100%", padding: 10, marginBottom: 10 },
   search: { flex: 1, padding: 10 },
@@ -329,7 +381,6 @@ const styles = {
     padding: 10,
     border: "none",
     borderRadius: 8,
-    marginRight: 10,
   },
   btnSmall: {
     marginRight: 5,
@@ -338,5 +389,16 @@ const styles = {
     border: "none",
     padding: "6px 10px",
     borderRadius: 8,
+  },
+  configBox: {
+    background: "white",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 10,
   },
 };
