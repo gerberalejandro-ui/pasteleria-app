@@ -33,19 +33,23 @@ export default function Recetas() {
     if (rec.data) setRecetas(rec.data);
   };
 
-  /* ======================
-     🔧 NORMALIZAR UNIDADES
-  ====================== */
+  /* =========================
+     🔥 UNIDADES CORREGIDAS
+  ========================= */
   const formatearUnidad = (unidad, cantidad) => {
+    const cant = Number(cantidad);
+
     if (unidad === "kg") {
-      return cantidad < 1 ? `${cantidad * 1000} g` : `${cantidad} kg`;
+      // SIEMPRE mostrar en gramos para precisión
+      return `${cant * 1000} g`;
     }
 
     if (unidad === "litro") {
-      return cantidad < 1 ? `${cantidad * 1000} ml` : `${cantidad} L`;
+      // SIEMPRE mostrar en ml para precisión
+      return `${cant * 1000} ml`;
     }
 
-    return `${cantidad} ${unidad}`;
+    return `${cant} ${unidad}`;
   };
 
   const agregarIngrediente = () => {
@@ -88,6 +92,7 @@ export default function Recetas() {
     }
 
     const costoIngredientes = calcularCostoIngredientes();
+
     const manoObra =
       Number(nuevaReceta.tiempo_horas || 0) *
       Number(nuevaReceta.valor_hora || 0);
@@ -150,7 +155,6 @@ export default function Recetas() {
     <div style={styles.page}>
       <h1 style={styles.title}>Recetas</h1>
 
-      {/* HEADER */}
       <div style={styles.topBar}>
         <button
           style={styles.btnPrimary}
@@ -174,7 +178,7 @@ export default function Recetas() {
 
           <input
             style={styles.input}
-            placeholder="Nombre ingrediente"
+            placeholder="Nombre receta"
             value={nuevaReceta.nombre}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, nombre: e.target.value })
@@ -190,7 +194,6 @@ export default function Recetas() {
             }
           />
 
-          {/* 🔥 SELECT INSUMOS CORREGIDO */}
           <select
             style={styles.input}
             value={insumoId}
@@ -216,7 +219,6 @@ export default function Recetas() {
             Agregar ingrediente
           </button>
 
-          {/* INGREDIENTES */}
           <div style={{ marginTop: 10 }}>
             {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
@@ -264,20 +266,22 @@ export default function Recetas() {
 
             {recetaExpandida === r.id && (
               <div style={styles.expand}>
+                
+                {/* 🔥 NOMBRE AGREGADO */}
+                <h2 style={{ color: "#d63384" }}>{r.nombre}</h2>
+
                 <h3>Procedimiento</h3>
                 <p>{r.procedimiento}</p>
 
                 <h3>Ingredientes</h3>
 
-                <div style={styles.tableIngredients}>
-                  {r.ingredientes?.map((i, index) => (
-                    <div key={index} style={styles.rowIng}>
-                      <span>{i.nombre}</span>
-                      <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
-                      <span>${Number(i.costo).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
+                {r.ingredientes?.map((i, index) => (
+                  <div key={index} style={styles.rowIng}>
+                    <span>{i.nombre}</span>
+                    <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
+                    <span>${Number(i.costo).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
             )}
           </>
@@ -287,7 +291,7 @@ export default function Recetas() {
   );
 }
 
-/* ===== estilos ===== */
+/* ===== estilos (IGUAL) ===== */
 
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
@@ -303,13 +307,13 @@ const styles = {
     borderRadius: 10,
   },
   expand: { background: "#fff7f0", padding: 15, borderRadius: 10 },
-  tableIngredients: { display: "grid", gap: 6 },
   rowIng: {
     display: "grid",
     gridTemplateColumns: "2fr 1fr 1fr",
     padding: 8,
     background: "#ffe5ec",
     borderRadius: 8,
+    marginBottom: 6,
   },
   input: { width: "100%", padding: 10, marginBottom: 10 },
   search: { flex: 1, padding: 10 },
@@ -326,7 +330,6 @@ const styles = {
     padding: 10,
     border: "none",
     borderRadius: 8,
-    marginTop: 5,
   },
   btnSmall: {
     marginRight: 5,
