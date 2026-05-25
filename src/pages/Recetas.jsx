@@ -86,95 +86,103 @@ export default function Recetas() {
 
   /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
-    const insumo = insumos.find(
-      (i) => String(i.id) === String(insumoId)
-    );
+  const insumo = insumos.find(
+    (i) => Number(i.id) === Number(insumoId)
+  );
 
-    if (!insumo || !cantidad) return;
+  if (!insumo) {
+    alert("Seleccioná un insumo");
+    return;
+  }
 
-    const c = Number(cantidad);
+  if (!cantidad || Number(cantidad) <= 0) {
+    alert("Ingresá una cantidad válida");
+    return;
+  }
 
-    const costo =
-      insumo.unidad === "kg" || insumo.unidad === "litro"
-        ? (Number(insumo.precio) / 1000) * c
-        : Number(insumo.precio) * c;
+  const c = Number(cantidad);
 
-    const ingrediente = {
-      nombre: insumo.nombre,
-      unidad: insumo.unidad,
-      cantidad: c,
-      costo,
-    };
+  const costo =
+    insumo.unidad === "kg" || insumo.unidad === "litro"
+      ? (Number(insumo.precio) / 1000) * c
+      : Number(insumo.precio) * c;
 
-    setNuevaReceta((prev) => ({
-      ...prev,
-      ingredientes: [...prev.ingredientes, ingrediente],
-    }));
-
-    setInsumoId("");
-    setCantidad("");
+  const ingrediente = {
+    nombre: insumo.nombre,
+    unidad: insumo.unidad,
+    cantidad: c,
+    costo,
   };
 
+  setNuevaReceta((prev) => ({
+    ...prev,
+    ingredientes: [...prev.ingredientes, ingrediente],
+  }));
+
+  setInsumoId("");
+  setCantidad("");
+};
   const calcularCostoIngredientes = () =>
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
   /* ================= GUARDAR ================= */
   const guardarReceta = async () => {
-    const ingredientes = calcularCostoIngredientes();
+  if (!nuevaReceta.nombre) {
+    alert("Ingresá un nombre");
+    return;
+  }
 
-    const manoObra =
-      Number(nuevaReceta.tiempo_horas || 0) *
-      config.costo_hora_hombre;
+  if (nuevaReceta.ingredientes.length === 0) {
+    alert("Agregá al menos un ingrediente");
+    return;
+  }
 
-    const luz =
-      Number(nuevaReceta.horas_luz || 0) *
-      config.costo_luz_hora;
+  const ingredientes = calcularCostoIngredientes();
 
-    const costoFinal = ingredientes + manoObra + luz;
+  const manoObra =
+    Number(nuevaReceta.tiempo_horas || 0) *
+    Number(config.costo_hora_hombre || 0);
 
-    const precioFinal =
-      costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
+  const luz =
+    Number(nuevaReceta.horas_luz || 0) *
+    Number(config.costo_luz_hora || 0);
 
-    const { error } = await supabase.from("recetas").insert([
-  {
-        nombre: nuevaReceta.nombre,
-        procedimiento: nuevaReceta.procedimiento,
-        tiempo_horas: Number(nuevaReceta.tiempo_horas || 0),
-        horas_luz: Number(nuevaReceta.horas_luz || 0),
-        ingredientes: nuevaReceta.ingredientes,
-        costo: costoFinal,
-        precio_final: precioFinal,
-      },
-    ]);
+  const costoFinal = ingredientes + manoObra + luz;
 
-    if (error) {
-      console.log(error);
-      alert("Error al guardar receta");
-      return;
-    }
+  const precioFinal =
+    costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
-    cargarDatos();
+  const { error } = await supabase.from("recetas").insert([
+    {
+      nombre: nuevaReceta.nombre,
+      procedimiento: nuevaReceta.procedimiento,
+      tiempo_horas: Number(nuevaReceta.tiempo_horas || 0),
+      horas_luz: Number(nuevaReceta.horas_luz || 0),
+      ingredientes: nuevaReceta.ingredientes,
+      costo: costoFinal,
+      precio_final: precioFinal,
+    },
+  ]);
 
-    setNuevaReceta({
-      nombre: "",
-      margen: 30,
-      procedimiento: "",
-      tiempo_horas: "",
-      horas_luz: "",
-      ingredientes: [],
-    });
+  if (error) {
+    console.log(error);
+    alert("Error al guardar receta");
+    return;
+  }
 
-    setMostrarFormulario(false);
-  };
+  cargarDatos();
 
-  const eliminarReceta = async (id) => {
-    await supabase.from("recetas").delete().eq("id", id);
-    cargarDatos();
-  };
+  setNuevaReceta({
+    nombre: "",
+    margen: 30,
+    procedimiento: "",
+    tiempo_horas: "",
+    horas_luz: "",
+    ingredientes: [],
+  });
 
-  const recetasFiltradas = recetas.filter((r) =>
-    r.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  setMostrarFormulario(false);
+};
 
   /* ================= UI ================= */
   return (
