@@ -15,50 +15,57 @@ import Admin from "./pages/Admin";
 export default function App() {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
-  const [init, setInit] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const initApp = async () => {
+    const init = async () => {
       try {
         const { data } = await supabase.auth.getSession();
 
         const sessionUser = data?.session?.user || null;
         setUser(sessionUser);
 
+        // 🔥 PERFIL EN BACKGROUND (NO BLOQUEA LA APP)
         if (sessionUser) {
-          const { data: perfilData } = await supabase
+          supabase
             .from("perfiles")
             .select("*")
             .eq("id", sessionUser.id)
-            .maybeSingle();
-
-          setPerfil(perfilData || null);
+            .maybeSingle()
+            .then(({ data }) => {
+              setPerfil(data || null);
+            })
+            .catch((err) => {
+              console.log("Error perfil:", err);
+              setPerfil(null);
+            });
         }
       } catch (e) {
         console.log("INIT ERROR:", e);
-        setPerfil(null);
         setUser(null);
+        setPerfil(null);
       } finally {
-        setInit(true);
+        setReady(true);
       }
     };
 
-    initApp();
+    init();
 
     const { data: listener } =
-      supabase.auth.onAuthStateChange(async (_event, session) => {
+      supabase.auth.onAuthStateChange((_event, session) => {
         const sessionUser = session?.user || null;
-
         setUser(sessionUser);
 
         if (sessionUser) {
-          const { data: perfilData } = await supabase
+          supabase
             .from("perfiles")
             .select("*")
             .eq("id", sessionUser.id)
-            .maybeSingle();
-
-          setPerfil(perfilData || null);
+            .maybeSingle()
+            .then(({ data }) => {
+              setPerfil(data || null);
+            })
+            .catch(() => setPerfil(null));
         } else {
           setPerfil(null);
         }
@@ -73,7 +80,7 @@ export default function App() {
     setPerfil(null);
   };
 
-  if (!init) {
+  if (!ready) {
     return <div style={{ padding: 30 }}>Cargando...</div>;
   }
 
@@ -91,7 +98,7 @@ export default function App() {
     );
   }
 
-  // ✅ estado único de autorización
+  // ✅ ÚNICA FUENTE DE VERDAD
   const isAutorizado = user && perfil?.aprobado === true;
 
   return (
