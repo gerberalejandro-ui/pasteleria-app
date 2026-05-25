@@ -10,11 +10,10 @@ export default function Recetas() {
 
   const [nuevaReceta, setNuevaReceta] = useState({
     nombre: "",
-    margen: 30, // 👈 ahora editable claro
+    margen: "",
     procedimiento: "",
-    tiempo_horas: "",
-    valor_hora: "",
-    costo_luz: "",
+    horas_trabajo: "",
+    horas_luz: "",
     ingredientes: [],
   });
 
@@ -22,10 +21,10 @@ export default function Recetas() {
   const [cantidad, setCantidad] = useState("");
 
   /* =========================
-     ⚙️ COSTOS FIJOS CONFIGURABLES
+     ⚙️ CONFIGURACIÓN EDITABLE
   ========================= */
-  const [costoHoraHombre, setCostoHoraHombre] = useState(1000);
-  const [costoLuzHora, setCostoLuzHora] = useState(200);
+  const [costoHoraHombre, setCostoHoraHombre] = useState("");
+  const [costoHoraLuz, setCostoHoraLuz] = useState("");
 
   useEffect(() => {
     cargarDatos();
@@ -82,7 +81,7 @@ export default function Recetas() {
   };
 
   const calcularCostoIngredientes = () =>
-    nuevaReceta.ingredientes.reduce((acc, item) => acc + item.costo, 0);
+    nuevaReceta.ingredientes.reduce((acc, i) => acc + i.costo, 0);
 
   const guardarReceta = async () => {
     if (!nuevaReceta.nombre || nuevaReceta.ingredientes.length === 0) {
@@ -92,17 +91,13 @@ export default function Recetas() {
 
     const costoIngredientes = calcularCostoIngredientes();
 
-    const tiempo = Number(nuevaReceta.tiempo_horas || 0);
+    const horasTrabajo = Number(nuevaReceta.horas_trabajo || 0);
+    const horasLuz = Number(nuevaReceta.horas_luz || 0);
 
-    /* =========================
-       🔥 COSTOS CORREGIDOS
-    ========================= */
-    const manoObra = tiempo * costoHoraHombre;
+    const manoObra = horasTrabajo * Number(costoHoraHombre || 0);
+    const luz = horasLuz * Number(costoHoraLuz || 0);
 
-    const costoLuzTotal = tiempo * costoLuzHora;
-
-    const costoFinal =
-      costoIngredientes + manoObra + costoLuzTotal;
+    const costoFinal = costoIngredientes + manoObra + luz;
 
     const precioFinal =
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
@@ -112,9 +107,10 @@ export default function Recetas() {
         nombre: nuevaReceta.nombre,
         margen: Number(nuevaReceta.margen),
         procedimiento: nuevaReceta.procedimiento,
-        tiempo_horas: tiempo,
-        valor_hora: costoHoraHombre,
-        costo_luz: costoLuzHora,
+        horas_trabajo: horasTrabajo,
+        horas_luz: horasLuz,
+        costo_hora_hombre: Number(costoHoraHombre),
+        costo_hora_luz: Number(costoHoraLuz),
         costo: costoFinal,
         precio_final: precioFinal,
         ingredientes: nuevaReceta.ingredientes,
@@ -132,11 +128,10 @@ export default function Recetas() {
 
     setNuevaReceta({
       nombre: "",
-      margen: 30,
+      margen: "",
       procedimiento: "",
-      tiempo_horas: "",
-      valor_hora: "",
-      costo_luz: "",
+      horas_trabajo: "",
+      horas_luz: "",
       ingredientes: [],
     });
 
@@ -160,25 +155,27 @@ export default function Recetas() {
       <h1 style={styles.title}>📋 Recetas</h1>
 
       {/* =========================
-         ⚙️ PANEL DE COSTOS FIJOS
+         CONFIGURACIÓN
       ========================= */}
       <div style={styles.card}>
         <h3>⚙️ Configuración de costos</h3>
 
+        <label>Costo hora hombre</label>
         <input
           style={styles.input}
           type="number"
-          placeholder="Costo hora hombre"
+          placeholder="Ej: 2000"
           value={costoHoraHombre}
-          onChange={(e) => setCostoHoraHombre(Number(e.target.value))}
+          onChange={(e) => setCostoHoraHombre(e.target.value)}
         />
 
+        <label>Costo luz por hora</label>
         <input
           style={styles.input}
           type="number"
-          placeholder="Costo luz por hora"
-          value={costoLuzHora}
-          onChange={(e) => setCostoLuzHora(Number(e.target.value))}
+          placeholder="Ej: 300"
+          value={costoHoraLuz}
+          onChange={(e) => setCostoHoraLuz(e.target.value)}
         />
       </div>
 
@@ -224,14 +221,23 @@ export default function Recetas() {
           <input
             style={styles.input}
             type="number"
-            placeholder="Horas de trabajo"
-            value={nuevaReceta.tiempo_horas}
+            placeholder="Horas trabajo"
+            value={nuevaReceta.horas_trabajo}
             onChange={(e) =>
-              setNuevaReceta({ ...nuevaReceta, tiempo_horas: e.target.value })
+              setNuevaReceta({ ...nuevaReceta, horas_trabajo: e.target.value })
             }
           />
 
-          {/* 🔥 MARGEN EDITABLE REAL */}
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Horas luz"
+            value={nuevaReceta.horas_luz}
+            onChange={(e) =>
+              setNuevaReceta({ ...nuevaReceta, horas_luz: e.target.value })
+            }
+          />
+
           <input
             style={styles.input}
             type="number"
@@ -288,12 +294,9 @@ export default function Recetas() {
         {recetasFiltradas.map((r) => (
           <div key={r.id} style={styles.row}>
             <div><b>{r.nombre}</b></div>
-
-            <div>💰 Costo: ${Number(r.costo).toFixed(2)}</div>
-
-            <div>💲 Precio: ${Number(r.precio_final).toFixed(2)}</div>
-
-            <div>⏱ {r.tiempo_horas} hs</div>
+            <div>💰 ${Number(r.costo).toFixed(2)}</div>
+            <div>💲 ${Number(r.precio_final).toFixed(2)}</div>
+            <div>⏱ {r.horas_trabajo}h</div>
 
             <div>
               <button
@@ -304,20 +307,11 @@ export default function Recetas() {
               >
                 Ver
               </button>
-
-              <button
-                style={{ ...styles.btnSmall, background: "#dc3545" }}
-                onClick={() => eliminarReceta(r.id)}
-              >
-                Eliminar
-              </button>
             </div>
 
             {recetaExpandida === r.id && (
               <div style={styles.expand}>
-                <h2 style={{ color: "#d63384" }}>{r.nombre}</h2>
-
-                <h3>Procedimiento</h3>
+                <h2>{r.nombre}</h2>
                 <p>{r.procedimiento}</p>
 
                 <h3>Ingredientes</h3>
@@ -326,7 +320,7 @@ export default function Recetas() {
                   <div key={index} style={styles.rowIng}>
                     <span>{i.nombre}</span>
                     <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
-                    <span>${Number(i.costo).toFixed(2)}</span>
+                    <span>${i.costo}</span>
                   </div>
                 ))}
               </div>
@@ -338,7 +332,7 @@ export default function Recetas() {
   );
 }
 
-/* styles iguales */
+/* estilos igual */
 const styles = {
   page: { padding: 20, background: "#f6f7fb", minHeight: "100vh" },
   title: { fontSize: 34, color: "#d63384" },
@@ -347,7 +341,7 @@ const styles = {
   table: { display: "flex", flexDirection: "column", gap: 10 },
   row: {
     display: "grid",
-    gridTemplateColumns: "2fr 2fr 2fr 1fr 1fr",
+    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
     background: "white",
     padding: 12,
     borderRadius: 10,
