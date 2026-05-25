@@ -157,11 +157,11 @@ export default function Recetas() {
       },
     ]);
 
-    if (error) {
-      console.log(error);
-      alert("Error al guardar receta");
-      return;
-    }
+  if (error) {
+    console.log(error);
+    alert(error.message);
+    return;
+  }
 
     await cargarDatos();
 
