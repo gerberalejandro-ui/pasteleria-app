@@ -390,14 +390,47 @@ export default function Recetas() {
               <div style={styles.expand}>
                 <h3>📌 {r.nombre}</h3>
 
-                <p>{r.procedimiento}</p>
+                <p>
+                  <strong>Procedimiento:</strong><br />
+                  {r.procedimiento}
+                </p>
+
+                <p>
+                  <strong>⏱ Horas de trabajo:</strong> {r.tiempo_horas}
+                </p>
+
+                <p>
+                  <strong>💡 Horas de luz:</strong> {r.horas_luz}
+                </p>
+
+                <p>
+                  <strong>💰 Costo:</strong> ${r.costo}
+                </p>
+
+                <p>
+                  <strong>💵 Precio final:</strong> ${r.precio_final}
+                </p>
 
                 <h4>Ingredientes</h4>
+
+                <div style={styles.rowIng}>
+                  <strong>Ingrediente</strong>
+                  <strong>Cantidad</strong>
+                  <strong>Costo</strong>
+                </div>
 
                 {r.ingredientes?.map((i, index) => (
                   <div key={index} style={styles.rowIng}>
                     <span>{i.nombre}</span>
-                    <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
+
+                    <span>
+                      {i.unidad === "kg"
+                        ? `${i.cantidad} kg`
+                        : i.unidad === "litro"
+                        ? `${i.cantidad} l`
+                        : `${i.cantidad} ${i.unidad}`}
+                    </span>
+
                     <span>${i.costo}</span>
                   </div>
                 ))}
