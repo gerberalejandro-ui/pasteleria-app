@@ -94,11 +94,13 @@ export default function Recetas() {
     if (!insumo || !cantidad) return;
 
     const c = Number(cantidad);
-
+/*
     const costo =
       insumo.unidad === "kg" || insumo.unidad === "litro"
         ? (Number(insumo.precio) / 1000) * c
         : Number(insumo.precio) * c;
+*/
+    const costo = Number(insumo.precio) * c;
 
     const ingrediente = {
       nombre: insumo.nombre,
