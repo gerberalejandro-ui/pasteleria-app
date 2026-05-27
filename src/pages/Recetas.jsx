@@ -15,7 +15,7 @@ export default function Recetas() {
 
   const [nuevaReceta, setNuevaReceta] = useState({
     nombre: "",
-    //margen: 0,
+    margen: 0,
     procedimiento: "",
     tiempo_horas: "",
     horas_luz: "",
@@ -185,7 +185,7 @@ export default function Recetas() {
 
     setNuevaReceta({
       nombre: "",
-      //margen: 30,
+      margen: 0,
       procedimiento: "",
       tiempo_horas: "",
       horas_luz: "",
