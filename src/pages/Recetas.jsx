@@ -358,9 +358,26 @@ export default function Recetas() {
       )}
 
       {/* LISTA */}
-      <div style={styles.table}>
-        {recetasFiltradas.map((r) => (
-          <>
+<div style={styles.table}>
+
+  {/* TITULOS */}
+  <div
+    style={{
+      ...styles.row,
+      background: "#d63384",
+      color: "white",
+      fontWeight: "bold",
+    }}
+  >
+    <div>🧾 Receta</div>
+    <div>💰 Costo</div>
+    <div>💵 Precio final</div>
+    <div>⏱ Horas</div>
+    <div>⚙️ Acciones</div>
+  </div>
+
+  {recetasFiltradas.map((r) => (
+    <div key={r.id}>
             <div key={r.id} style={styles.row}>
               <div>🧾 {r.nombre}</div>
               <div>💰 ${r.costo}</div>
@@ -446,7 +463,7 @@ export default function Recetas() {
                 ))}
               </div>
             )}
-          </>
+          </div>
         ))}
       </div>
     </div>
