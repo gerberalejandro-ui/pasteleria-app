@@ -395,21 +395,31 @@ export default function Recetas() {
                   {r.procedimiento}
                 </p>
 
-                <p>
-                  <strong>⏱ Horas de trabajo:</strong> {r.tiempo_horas}
-                </p>
+               <h4>Detalles</h4>
 
-                <p>
-                  <strong>💡 Horas de luz:</strong> {r.horas_luz}
-                </p>
+                  <div style={styles.rowIng}>
+                    <strong>Horas trabajo</strong>
+                    <strong>Horas luz</strong>
+                    <strong>Margen</strong>
+                  </div>
 
-                <p>
-                  <strong>💰 Costo:</strong> ${r.costo}
-                </p>
+                  <div style={styles.rowIng}>
+                    <span>{r.tiempo_horas}</span>
+                    <span>{r.horas_luz}</span>
+                    <span>{r.margen || 0}%</span>
+                  </div>
 
-                <p>
-                  <strong>💵 Precio final:</strong> ${r.precio_final}
-                </p>
+                  <div style={styles.rowIng}>
+                    <strong>Costo</strong>
+                    <strong>Precio final</strong>
+                    <strong></strong>
+                  </div>
+
+                  <div style={styles.rowIng}>
+                    <span>${r.costo}</span>
+                    <span>${r.precio_final}</span>
+                    <span></span>
+                  </div>
 
                 <h4>Ingredientes</h4>
 
