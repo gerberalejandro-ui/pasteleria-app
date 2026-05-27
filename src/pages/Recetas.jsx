@@ -15,7 +15,7 @@ export default function Recetas() {
 
   const [nuevaReceta, setNuevaReceta] = useState({
     nombre: "",
-    margen: 0,
+    margen: "",
     procedimiento: "",
     tiempo_horas: "",
     horas_luz: "",
@@ -187,7 +187,7 @@ export default function Recetas() {
 
     setNuevaReceta({
       nombre: "",
-      margen: 0,
+      margen: "",
       procedimiento: "",
       tiempo_horas: "",
       horas_luz: "",
@@ -308,7 +308,7 @@ export default function Recetas() {
             style={styles.input}
             placeholder="📈 Margen %"
             type="number"
-            value={nuevaReceta.margen}
+            value={nuevaReceta.margen || ""}
             onChange={(e) =>
               setNuevaReceta({ ...nuevaReceta, margen: e.target.value })
             }
