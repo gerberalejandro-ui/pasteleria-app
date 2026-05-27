@@ -48,7 +48,7 @@ export default function Navbar({ user }) {
             alignItems: "center",
           }}
         >
-          <Link to="/insumos" style={linkStyle}>
+          <Link to="/Insumos" style={linkStyle}>
             Insumos
           </Link>
 

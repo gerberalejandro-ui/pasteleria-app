@@ -115,30 +115,14 @@ export default function App() {
 
           {/* PROTEGIDAS */}
           <Route
-            path="/"
+            path="/insumos"
             element={isAutorizado ? <Insumos /> : <Navigate to="/login" />}
           />
-
           <Route
-            path="/recetas"
-            element={isAutorizado ? <Recetas /> : <Navigate to="/login" />}
-          />
-
-          <Route
-            path="/productos"
-            element={isAutorizado ? <Productos /> : <Navigate to="/login" />}
-          />
-
-          <Route
-            path="/producto/:id"
+            path="/"
             element={
-              isAutorizado ? <DetalleProducto /> : <Navigate to="/login" />
+              isAutorizado ? <Navigate to="/recetas" /> : <Navigate to="/login" />
             }
-          />
-
-          <Route
-            path="/dashboard"
-            element={isAutorizado ? <Dashboard /> : <Navigate to="/login" />}
           />
 
           <Route
