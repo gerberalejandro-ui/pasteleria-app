@@ -76,14 +76,14 @@ export default function Recetas() {
 
   /* ================= UNIDADES ================= */
   const formatearUnidad = (unidad, cantidad) => {
-    const c = Number(cantidad);
+  const c = Number(cantidad);
 
-    if (unidad === "kg") return `${c} g`;
+  if (unidad === "kg") return `${c} kg`;
 
-    if (unidad === "litro") return `${c} ml`;
+  if (unidad === "litro") return `${c} litros`;
 
-    return `${c} ${unidad}`;
-  };
+  return `${c} ${unidad}`;
+};
 
   /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
