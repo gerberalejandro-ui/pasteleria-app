@@ -360,21 +360,21 @@ export default function Recetas() {
       {/* LISTA */}
       <div style={styles.table}>
 
-  {/* TITULOS */}
-  <div
-    style={{
-      ...styles.row,
-      background: "#d63384",
-      color: "white",
-      fontWeight: "bold",
-    }}
-  >
-    <div>Receta</div>
-    <div>Costo</div>
-    <div>Precio final</div>
-    <div>Hs trabajo</div>
-    <div>Acciones</div>
-  </div>
+          {/* TITULOS */}
+          <div
+            style={{
+              ...styles.row,
+              background: "#d63384",
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            <div>Receta</div>
+            <div>Costo</div>
+            <div>Precio final</div>
+            <div>Hs trabajo</div>
+            <div>Acciones</div>
+          </div>
 
   {recetasFiltradas.map((r) => (
         {recetasFiltradas.map((r) => (
