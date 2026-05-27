@@ -165,6 +165,8 @@ export default function Recetas() {
         ingredientes: nuevaReceta.ingredientes,
         costo: costoFinal,
         precio_final: precioFinal,
+        valor_hora: Number(cfg.costo_hora_hombre || 0),
+        costo_luz: Number(cfg.costo_luz_hora || 0),
       },
     ]);
 
@@ -178,7 +180,7 @@ export default function Recetas() {
 
     setNuevaReceta({
       nombre: "",
-      margen: 30,
+      //margen: 30,
       procedimiento: "",
       tiempo_horas: "",
       horas_luz: "",
