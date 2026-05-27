@@ -155,18 +155,25 @@ export default function Recetas() {
       costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
     // ✅ FIX
-    const { error } = await supabase.from("recetas").insert([
-      {
-        nombre: nuevaReceta.nombre,
-        procedimiento: nuevaReceta.procedimiento,
-        tiempo_horas: Number(nuevaReceta.tiempo_horas),
-        horas_luz: Number(nuevaReceta.horas_luz),
-        margen: Number(nuevaReceta.margen || 0),
-        ingredientes: nuevaReceta.ingredientes,
-        costo: costoFinal,
-        precio_final: precioFinal,
-      },
-    ]);
+   const { error } = await supabase.from("recetas").insert([
+  {
+    nombre: nuevaReceta.nombre,
+    procedimiento: nuevaReceta.procedimiento,
+
+    tiempo_horas: Number(nuevaReceta.tiempo_horas),
+    horas_luz: Number(nuevaReceta.horas_luz),
+
+    valor_hora: Number(manoObra),
+    costo_luz: Number(luz),
+
+    margen: Number(nuevaReceta.margen || 0),
+
+    ingredientes: nuevaReceta.ingredientes,
+
+    costo: Number(costoFinal),
+    precio_final: Number(precioFinal),
+  },
+]);
 
     if (error) {
       console.log(error);
