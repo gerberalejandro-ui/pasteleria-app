@@ -75,12 +75,21 @@ export default function Recetas() {
   };
 
   /* ================= UNIDADES ================= */
-  const formatearUnidad = (unidad, cantidad) => {
+ /* const formatearUnidad = (unidad, cantidad) => {
   const c = Number(cantidad);
 
   if (unidad === "kg") return `${c} kg`;
 
   if (unidad === "litro") return `${c} litros`;
+
+  return `${c} ${unidad}`;
+};*/
+const formatearUnidad = (unidad, cantidad) => {
+  const c = Number(cantidad);
+
+  if (unidad === "kg") return `${c} gr`;
+
+  if (unidad === "litro") return `${c} ml`;
 
   return `${c} ${unidad}`;
 };
@@ -100,7 +109,16 @@ export default function Recetas() {
         ? (Number(insumo.precio) / 1000) * c
         : Number(insumo.precio) * c;
 */
-    const costo = Number(insumo.precio) * c;
+   // const costo = Number(insumo.precio) * c;
+
+
+   const costo =
+  insumo.unidad === "kg"
+    ? (Number(insumo.precio) / 1000) * c
+    : insumo.unidad === "litro"
+    ? (Number(insumo.precio) / 1000) * c
+    : Number(insumo.precio) * c;
+
 
     const ingrediente = {
       nombre: insumo.nombre,
@@ -451,11 +469,11 @@ export default function Recetas() {
                     <span>{i.nombre}</span>
 
                     <span>
-                      {i.unidad === "kg"
-                        ? `${i.cantidad} kg`
-                        : i.unidad === "litro"
-                        ? `${i.cantidad} l`
-                        : `${i.cantidad} ${i.unidad}`}
+                     {i.unidad === "kg"
+                      ? `${i.cantidad} gr`
+                      : i.unidad === "litro"
+                      ? `${i.cantidad} ml`
+                      : `${i.cantidad} ${i.unidad}`}
                     </span>
 
                     <span>${i.costo}</span>
