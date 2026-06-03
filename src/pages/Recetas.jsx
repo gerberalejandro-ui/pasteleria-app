@@ -96,54 +96,43 @@ const formatearUnidad = (unidad, cantidad) => {
 
   /* ================= INGREDIENTES ================= */
   const agregarIngrediente = () => {
-    const insumo = insumos.find(
-      (i) => String(i.id) === String(insumoId)
-    );
+  const insumo = insumos.find(
+    (i) => String(i.id) === String(insumoId)
+  );
 
-    if (!insumo || !cantidad) return;
+  if (!insumo || !cantidad) return;
 
-    const eliminarIngrediente = (index) => {
-      setNuevaReceta((prev) => ({
-        ...prev,
-        ingredientes: prev.ingredientes.filter((_, i) => i !== index),
-      }));
-    };
+  const c = Number(cantidad);
 
-    const c = Number(cantidad);
-/*
-    const costo =
-      insumo.unidad === "kg" || insumo.unidad === "litro"
-        ? (Number(insumo.precio) / 1000) * c
-        : Number(insumo.precio) * c;
-*/
-   // const costo = Number(insumo.precio) * c;
+  const costo =
+    insumo.unidad === "kg"
+      ? (Number(insumo.precio) / 1000) * c
+      : insumo.unidad === "litro"
+      ? (Number(insumo.precio) / 1000) * c
+      : Number(insumo.precio) * c;
 
-
-   const costo =
-  insumo.unidad === "kg"
-    ? (Number(insumo.precio) / 1000) * c
-    : insumo.unidad === "litro"
-    ? (Number(insumo.precio) / 1000) * c
-    : Number(insumo.precio) * c;
-
-
-    const ingrediente = {
-      nombre: insumo.nombre,
-      unidad: insumo.unidad,
-      cantidad: c,
-      costo,
-    };
-
-    // ✅ FIX
-    setNuevaReceta((prev) => ({
-      ...prev,
-      ingredientes: [...prev.ingredientes, ingrediente],
-    }));
-
-    setInsumoId("");
-    setCantidad("");
+  const ingrediente = {
+    nombre: insumo.nombre,
+    unidad: insumo.unidad,
+    cantidad: c,
+    costo,
   };
 
+  setNuevaReceta((prev) => ({
+    ...prev,
+    ingredientes: [...prev.ingredientes, ingrediente],
+  }));
+
+  setInsumoId("");
+  setCantidad("");
+};
+
+const eliminarIngrediente = (index) => {
+  setNuevaReceta((prev) => ({
+    ...prev,
+    ingredientes: prev.ingredientes.filter((_, i) => i !== index),
+  }));
+};
   const calcularCostoIngredientes = () =>
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
