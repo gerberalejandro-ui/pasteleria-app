@@ -103,6 +103,14 @@ const formatearUnidad = (unidad, cantidad) => {
     if (!insumo || !cantidad) return;
 
     const c = Number(cantidad);
+  
+  
+    const eliminarIngrediente = (index) => {
+        setNuevaReceta((prev) => ({
+          ...prev,
+          ingredientes: prev.ingredientes.filter((_, i) => i !== index),
+        }));
+      };
 /*
     const costo =
       insumo.unidad === "kg" || insumo.unidad === "litro"
@@ -362,12 +370,31 @@ const formatearUnidad = (unidad, cantidad) => {
           >
             ➕ Agregar ingrediente
           </button>
-            {nuevaReceta.ingredientes.map((i, index) => (
+           {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
                 <span>{i.nombre}</span>
-                <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
+
+                <span>
+                  {formatearUnidad(i.unidad, i.cantidad)}
+                </span>
+
                 <span>${i.costo}</span>
-              </div>
+
+                <button
+                  type="button"
+                  onClick={() => eliminarIngrediente(index)}
+                  style={{
+                    background: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "4px 8px",
+                    cursor: "pointer",
+                  }}
+    >
+                      🗑
+                      </button>
+                </div>
             ))}
           <button onClick={guardarReceta} style={styles.btnPrimary}>
             💾 Guardar receta
@@ -497,7 +524,7 @@ const styles = {
   table: { display: "flex", flexDirection: "column", gap: 10 },
   row: {
     display: "grid",
-    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+   gridTemplateColumns: "2fr 1fr 1fr 80px",
     background: "white",
     padding: 12,
     borderRadius: 10,
