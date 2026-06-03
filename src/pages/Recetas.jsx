@@ -102,6 +102,13 @@ const formatearUnidad = (unidad, cantidad) => {
 
     if (!insumo || !cantidad) return;
 
+    const eliminarIngrediente = (index) => {
+      setNuevaReceta((prev) => ({
+        ...prev,
+        ingredientes: prev.ingredientes.filter((_, i) => i !== index),
+      }));
+    };
+
     const c = Number(cantidad);
 /*
     const costo =
@@ -362,11 +369,30 @@ const formatearUnidad = (unidad, cantidad) => {
           >
             ➕ Agregar ingrediente
           </button>
-            {nuevaReceta.ingredientes.map((i, index) => (
+           {nuevaReceta.ingredientes.map((i, index) => (
               <div key={index} style={styles.rowIng}>
                 <span>{i.nombre}</span>
-                <span>{formatearUnidad(i.unidad, i.cantidad)}</span>
+
+                <span>
+                  {formatearUnidad(i.unidad, i.cantidad)}
+                </span>
+
                 <span>${i.costo}</span>
+
+                <button
+                  type="button"
+                  onClick={() => eliminarIngrediente(index)}
+                  style={{
+                    background: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "4px 8px",
+                    cursor: "pointer",
+                  }}
+                >
+                  🗑
+                </button>
               </div>
             ))}
           <button onClick={guardarReceta} style={styles.btnPrimary}>
