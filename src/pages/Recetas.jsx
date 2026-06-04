@@ -220,6 +220,115 @@ const eliminarIngrediente = (index) => {
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+
+  const recalcularRecetas = async () => {
+  try {
+    // Leer insumos actuales
+    const { data: insumosDB, error: errorInsumos } =
+      await supabase.from("insumos").select("*");
+
+    if (errorInsumos) throw errorInsumos;
+
+    // Leer configuración actual
+    const { data: configDB, error: errorConfig } =
+      await supabase.from("costo_config").select("*");
+
+    if (errorConfig) throw errorConfig;
+
+    const cfg = {};
+
+    configDB.forEach((c) => {
+      cfg[c.clave] = Number(c.valor);
+    });
+
+    // Leer recetas
+    const { data: recetasDB, error: errorRecetas } =
+      await supabase.from("recetas").select("*");
+
+    if (errorRecetas) throw errorRecetas;
+
+    for (const receta of recetasDB) {
+      let costoIngredientes = 0;
+
+      const ingredientesActualizados =
+        receta.ingredientes?.map((ing) => {
+          const insumoActual = insumosDB.find(
+            (i) =>
+              i.nombre?.toLowerCase().trim() ===
+              ing.nombre?.toLowerCase().trim()
+          );
+
+          if (!insumoActual) {
+            return ing;
+          }
+
+          let costo = 0;
+
+          if (
+            insumoActual.unidad === "kg" ||
+            insumoActual.unidad === "litro"
+          ) {
+            costo =
+              (Number(insumoActual.precio) / 1000) *
+              Number(ing.cantidad);
+          } else {
+            costo =
+              Number(insumoActual.precio) *
+              Number(ing.cantidad);
+          }
+
+          costoIngredientes += costo;
+
+          return {
+            ...ing,
+            costo,
+          };
+        }) || [];
+
+      const manoObra =
+        Number(receta.tiempo_horas || 0) *
+        Number(cfg.costo_hora_hombre || 0);
+
+      const luz =
+        Number(receta.horas_luz || 0) *
+        Number(cfg.costo_luz_hora || 0);
+
+      const costoFinal =
+        costoIngredientes +
+        manoObra +
+        luz;
+
+      const precioFinal =
+        costoFinal +
+        (costoFinal * Number(receta.margen || 0)) / 100;
+
+      const { error } = await supabase
+        .from("recetas")
+        .update({
+          ingredientes: ingredientesActualizados,
+          valor_hora: manoObra,
+          costo_luz: luz,
+          costo: costoFinal,
+          precio_final: precioFinal,
+        })
+        .eq("id", receta.id);
+
+      if (error) {
+        console.log(
+          `Error actualizando receta ${receta.nombre}`,
+          error
+        );
+      }
+    }
+
+    await cargarDatos();
+
+    alert("✅ Todas las recetas fueron recalculadas");
+  } catch (err) {
+    console.log(err);
+    alert("❌ Error al recalcular recetas");
+  }
+};
   /* ================= UI ================= */
   return (
     <div style={styles.page}>
@@ -257,6 +366,12 @@ const eliminarIngrediente = (index) => {
 
         <button onClick={guardarConfig} style={styles.btnPrimary}>
           💾 Guardar configuración
+        </button>
+        <button
+          onClick={recalcularRecetas}
+          style={styles.btnSecondary}
+        >
+          🔄 Recalcular recetas
         </button>
       </div>
 
