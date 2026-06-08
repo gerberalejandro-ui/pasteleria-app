@@ -450,10 +450,16 @@ const eliminarIngrediente = (index) => {
           >
             <option value="">➕ Insumo</option>
 
-            {insumos.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.nombre}
-              </option>
+            {[...insumos]
+              .sort((a, b) =>
+                a.nombre.localeCompare(b.nombre, "es", {
+                  sensitivity: "base",
+                })
+              )
+              .map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.nombre}
+                </option>
             ))}
           </select>
 
