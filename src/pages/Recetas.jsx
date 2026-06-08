@@ -216,10 +216,15 @@ const eliminarIngrediente = (index) => {
     cargarDatos();
   };
 
-  const recetasFiltradas = recetas.filter((r) =>
+ const recetasFiltradas = recetas
+  .filter((r) =>
     r.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  )
+  .sort((a, b) =>
+    a.nombre.localeCompare(b.nombre, "es", {
+      sensitivity: "base",
+    })
   );
-
 
   const recalcularRecetas = async () => {
   try {
