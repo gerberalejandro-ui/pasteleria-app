@@ -453,7 +453,7 @@ const eliminarIngrediente = (index) => {
             onChange={(e) => setInsumoId(e.target.value)}
             style={styles.input}
           >
-            <option value="">➕ Insumo</option>
+            <option value="">➕ Materia Prima</option>
 
             {[...insumos]
               .sort((a, b) =>

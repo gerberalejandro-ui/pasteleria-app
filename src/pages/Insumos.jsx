@@ -175,7 +175,7 @@ export default function Insumos() {
         >
           {mostrarFormulario
             ? "Cerrar formulario"
-            : "Nuevo insumo"}
+            : "Nueva Materia Prima"}
         </button>
 
         <input
@@ -190,7 +190,7 @@ export default function Insumos() {
             boxSizing:
               "border-box",
           }}
-          placeholder="Buscar insumo..."
+          placeholder="Buscar Materia prima..."
           value={busqueda}
           onChange={(e) =>
             setBusqueda(

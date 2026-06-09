@@ -49,7 +49,7 @@ export default function Navbar({ user }) {
           }}
         >
           <Link to="/" style={linkStyle}>
-            Insumos
+            Materia Prima
           </Link>
 
           <Link to="/recetas" style={linkStyle}>
