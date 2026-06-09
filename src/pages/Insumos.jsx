@@ -143,7 +143,7 @@ export default function Insumos() {
           fontSize: 32,
         }}
       >
-        Insumos
+        Materia Prima
       </h1>
 
       <div
