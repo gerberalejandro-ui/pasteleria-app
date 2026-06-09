@@ -223,12 +223,13 @@ export default function Insumos() {
               color: "#d63384",
             }}
           >
-            Nuevo insumo
+            Nuevo materia prima
+        
           </h2>
 
           <div>
             <label>
-              Nombre del insumo
+              Nombre Materia Prima
             </label>
 
             <input
@@ -327,7 +328,7 @@ export default function Insumos() {
               width: "100%",
             }}
           >
-            Guardar insumo
+            Guardar Materia prima
           </button>
         </div>
       )}
@@ -355,7 +356,7 @@ export default function Insumos() {
               margin: 0,
             }}
           >
-            Editar insumo
+            Editar materia prima
           </h2>
 
           <input
@@ -498,7 +499,7 @@ export default function Insumos() {
             >
               <tr>
                 <th style={thStyle}>
-                  Insumo
+                  Materia Prima
                 </th>
 
                 <th style={thStyle}>
