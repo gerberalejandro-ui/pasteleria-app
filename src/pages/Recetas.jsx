@@ -256,6 +256,57 @@ const guardarCambiosReceta = async () => {
   setRecetaEditando(null);
 
   alert("✅ Receta actualizada");
+
+  let costoIngredientes = 0;
+
+    const ingredientesActualizados =
+      recetaEditando.ingredientes.map((ing) => {
+
+        const insumo = insumos.find(
+          (i) =>
+            Number(i.id) === Number(ing.insumo_id)
+        );
+
+        if (!insumo) return ing;
+
+        const costo =
+          insumo.unidad === "kg" ||
+          insumo.unidad === "litro"
+            ? (Number(insumo.precio) / 1000) *
+              Number(ing.cantidad)
+            : Number(insumo.precio) *
+              Number(ing.cantidad);
+
+        costoIngredientes += costo;
+
+        return {
+          ...ing,
+          costo,
+        };
+  });
+
+  const manoObra =
+  Number(recetaEditando.tiempo_horas || 0) *
+  Number(config.costo_hora_hombre || 0);
+
+const luz =
+  Number(recetaEditando.horas_luz || 0) *
+  Number(config.costo_luz_hora || 0);
+
+const costoFinal =
+  costoIngredientes +
+  manoObra +
+  luz;
+
+const precioFinal =
+  costoFinal +
+  (costoFinal *
+    Number(recetaEditando.margen || 0)) /
+    100;
+
+    ingredientes: ingredientesActualizados,
+      costo: costoFinal,
+      precio_final: precioFinal,
 };
 
 
@@ -642,6 +693,75 @@ const guardarCambiosReceta = async () => {
     />
 
     <h3>Ingredientes</h3>
+
+        <select
+          value={insumoId}
+          onChange={(e) => setInsumoId(e.target.value)}
+          style={styles.input}
+        >
+          <option value="">➕ Seleccionar insumo</option>
+
+          {[...insumos]
+            .sort((a, b) =>
+              a.nombre.localeCompare(b.nombre, "es", {
+                sensitivity: "base",
+              })
+            )
+            .map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.nombre}
+              </option>
+            ))}
+        </select>
+
+        <input
+          type="number"
+          placeholder="Cantidad"
+          value={cantidad}
+          onChange={(e) => setCantidad(e.target.value)}
+          style={styles.input}
+        />
+
+        <button
+          type="button"
+          style={styles.btnSecondary}
+          onClick={() => {
+            const insumo = insumos.find(
+              (i) => String(i.id) === String(insumoId)
+            );
+
+            if (!insumo || !cantidad) return;
+
+            const c = Number(cantidad);
+
+            const costo =
+              insumo.unidad === "kg" ||
+              insumo.unidad === "litro"
+                ? (Number(insumo.precio) / 1000) * c
+                : Number(insumo.precio) * c;
+
+            const nuevoIngrediente = {
+              insumo_id: insumo.id,
+              nombre: insumo.nombre,
+              unidad: insumo.unidad,
+              cantidad: c,
+              costo,
+            };
+
+            setRecetaEditando({
+              ...recetaEditando,
+              ingredientes: [
+                ...recetaEditando.ingredientes,
+                nuevoIngrediente,
+              ],
+            });
+
+            setInsumoId("");
+            setCantidad("");
+          }}
+        >
+          ➕ Agregar ingrediente
+        </button>
 
     {recetaEditando.ingredientes.map((ing, index) => (
       <div key={index} style={styles.rowIng}>
