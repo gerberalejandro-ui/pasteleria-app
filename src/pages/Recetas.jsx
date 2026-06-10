@@ -146,87 +146,94 @@ const eliminarIngrediente = (index) => {
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
   /* ================= GUARDAR ================= */
-  const guardarCambiosReceta = async () => {
-  const { data: configDB } = await supabase
-    .from("costo_config")
-    .select("*");
+  const guardarReceta = async () => {
+    // ✅ FIX
+    if (nuevaReceta.ingredientes.length === 0) {
+      alert("Agregá al menos un ingrediente");
+      return;
+    }
 
-  const cfg = {};
+        const ingredientes = calcularCostoIngredientes();
 
-  configDB.forEach((c) => {
-    cfg[c.clave] = Number(c.valor);
-  });
+        // traer config REAL desde supabase
+        const { data: configDB } = await supabase
+          .from("costo_config")
+          .select("*");
 
-  let costoIngredientes = 0;
+        const cfg = {};
 
-  const ingredientesActualizados =
-    recetaEditando.ingredientes.map((ing) => {
+        configDB.forEach((c) => {
+          cfg[c.clave] = Number(c.valor);
+        });
 
-      const insumoActual = insumos.find(
-        (i) => Number(i.id) === Number(ing.insumo_id)
-      );
+        const manoObra =
+          Number(nuevaReceta.tiempo_horas || 0) *
+          Number(cfg.costo_hora_hombre || 0);
 
-      if (!insumoActual) return ing;
+        const luz =
+          Number(nuevaReceta.horas_luz || 0) *
+          Number(cfg.costo_luz_hora || 0);
 
-      const costo =
-        insumoActual.unidad === "kg" ||
-        insumoActual.unidad === "litro"
-          ? (Number(insumoActual.precio) / 1000) *
-            Number(ing.cantidad)
-          : Number(insumoActual.precio) *
-            Number(ing.cantidad);
+        const costoFinal = ingredientes + manoObra + luz;
 
-      costoIngredientes += costo;
+    const precioFinal =
+      costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
 
-      return {
-        ...ing,
-        nombre: insumoActual.nombre,
-        unidad: insumoActual.unidad,
-        costo,
-      };
+    // ✅ FIX
+   const { error } = await supabase.from("recetas").insert([
+  {
+    nombre: nuevaReceta.nombre,
+    procedimiento: nuevaReceta.procedimiento,
+
+    tiempo_horas: Number(nuevaReceta.tiempo_horas),
+    horas_luz: Number(nuevaReceta.horas_luz),
+
+    valor_hora: Number(manoObra),
+    costo_luz: Number(luz),
+
+    margen: Number(nuevaReceta.margen || 0),
+
+    ingredientes: nuevaReceta.ingredientes,
+
+    costo: Number(costoFinal),
+    precio_final: Number(precioFinal),
+  },
+]);
+
+    if (error) {
+      console.log(error);
+      alert("Error al guardar receta");
+      return;
+    }
+
+    await cargarDatos();
+
+    setNuevaReceta({
+      nombre: "",
+      margen: "",
+      procedimiento: "",
+      tiempo_horas: "",
+      horas_luz: "",
+      ingredientes: [],
     });
 
-      const calcularCostoIngrediente = (insumo, cantidad) => {
-        if (!insumo) return 0;
+    setMostrarFormulario(false);
+  };
 
-        if (
-          insumo.unidad === "kg" ||
-          insumo.unidad === "litro"
-        ) {
-          return (Number(insumo.precio) / 1000) * Number(cantidad);
-        }
+  const eliminarReceta = async (id) => {
+    await supabase.from("recetas").delete().eq("id", id);
+    cargarDatos();
+  };
 
-        return Number(insumo.precio) * Number(cantidad);
-      };
+  const editarReceta = (receta) => {
+  setRecetaEditando({
+    ...receta,
+    ingredientes: [...(receta.ingredientes || [])],
+    });
+  };
 
-      const calcularCostoEdicion = () => {
-        if (!recetaEditando) return 0;
 
-        return recetaEditando.ingredientes.reduce(
-          (acc, ing) => acc + Number(ing.costo || 0),
-          0
-        );
-      };
-
-  const manoObra =
-    Number(recetaEditando.tiempo_horas || 0) *
-    Number(cfg.costo_hora_hombre || 0);
-
-  const luz =
-    Number(recetaEditando.horas_luz || 0) *
-    Number(cfg.costo_luz_hora || 0);
-
-  const costoFinal =
-    costoIngredientes +
-    manoObra +
-    luz;
-
-  const precioFinal =
-    costoFinal +
-    (costoFinal *
-      Number(recetaEditando.margen || 0)) /
-      100;
-
+const guardarCambiosReceta = async () => {
   const { error } = await supabase
     .from("recetas")
     .update({
@@ -235,16 +242,11 @@ const eliminarIngrediente = (index) => {
       tiempo_horas: recetaEditando.tiempo_horas,
       horas_luz: recetaEditando.horas_luz,
       margen: recetaEditando.margen,
-      ingredientes: ingredientesActualizados,
-      valor_hora: manoObra,
-      costo_luz: luz,
-      costo: costoFinal,
-      precio_final: precioFinal,
+      ingredientes: recetaEditando.ingredientes,
     })
     .eq("id", recetaEditando.id);
 
   if (error) {
-    console.log(error);
     alert("Error al guardar cambios");
     return;
   }
@@ -255,6 +257,7 @@ const eliminarIngrediente = (index) => {
 
   alert("✅ Receta actualizada");
 };
+
 
  const recetasFiltradas = recetas
   .filter((r) =>
@@ -672,38 +675,26 @@ const eliminarIngrediente = (index) => {
           type="button"
           style={styles.btnSecondary}
           onClick={() => {
-
             const insumo = insumos.find(
               (i) => String(i.id) === String(insumoId)
             );
 
             if (!insumo || !cantidad) return;
 
-            const existe =
-              recetaEditando.ingredientes.some(
-                (ing) =>
-                  Number(ing.insumo_id) ===
-                  Number(insumo.id)
-              );
-
-            if (existe) {
-              alert(
-                "Ese ingrediente ya existe en la receta"
-              );
-              return;
-            }
-
             const c = Number(cantidad);
+
+            const costo =
+              insumo.unidad === "kg" ||
+              insumo.unidad === "litro"
+                ? (Number(insumo.precio) / 1000) * c
+                : Number(insumo.precio) * c;
 
             const nuevoIngrediente = {
               insumo_id: insumo.id,
               nombre: insumo.nombre,
               unidad: insumo.unidad,
               cantidad: c,
-              costo: calcularCostoIngrediente(
-                insumo,
-                c
-              ),
+              costo,
             };
 
             setRecetaEditando({
@@ -726,41 +717,22 @@ const eliminarIngrediente = (index) => {
         <span>{ing.nombre}</span>
 
         <input
-            type="number"
-            value={ing.cantidad}
-            onChange={(e) => {
+          type="number"
+          value={ing.cantidad}
+          onChange={(e) => {
+            const nuevos =
+              [...recetaEditando.ingredientes];
 
-              const nuevos =
-                [...recetaEditando.ingredientes];
+            nuevos[index].cantidad =
+              Number(e.target.value);
 
-              const nuevaCantidad =
-                Number(e.target.value);
+            setRecetaEditando({
+              ...recetaEditando,
+              ingredientes: nuevos,
+            });
+          }}
+        />
 
-              const insumoActual =
-                insumos.find(
-                  (i) =>
-                    Number(i.id) ===
-                    Number(ing.insumo_id)
-                );
-
-              nuevos[index] = {
-                ...nuevos[index],
-                cantidad: nuevaCantidad,
-                costo: calcularCostoIngrediente(
-                  insumoActual,
-                  nuevaCantidad
-                ),
-              };
-
-              setRecetaEditando({
-                ...recetaEditando,
-                ingredientes: nuevos,
-              });
-            }}
-          />
-          <span>
-            ${Number(ing.costo || 0).toFixed(2)}
-          </span>
         <button
           onClick={() => {
             const nuevos =
@@ -779,18 +751,6 @@ const eliminarIngrediente = (index) => {
       </div>
     ))}
 
-    <div
-      style={{
-        padding: 15,
-        marginTop: 15,
-        background: "#fff0f6",
-        borderRadius: 10,
-        fontWeight: "bold",
-      }}
-    >
-      💰 Costo ingredientes:
-      ${calcularCostoEdicion().toFixed(2)}
-    </div>
     <button
       onClick={guardarCambiosReceta}
       style={styles.btnPrimary}
