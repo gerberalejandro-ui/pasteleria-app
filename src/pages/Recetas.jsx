@@ -856,12 +856,15 @@ const styles = {
     borderRadius: 8,
   },
   btnSmall: {
-    marginRight: 5,
+    marginRight: 2,
     background: "#ff8fab",
     color: "white",
     border: "none",
-    padding: "6px 10px",
-    borderRadius: 8,
+    padding: "2px 5px",
+    borderRadius: 5,
+    fontSize: "11px",
+    minWidth: "45px",
+    cursor: "pointer",
   },
   configBox: {
     background: "white",
