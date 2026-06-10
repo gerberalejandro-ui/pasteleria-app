@@ -112,7 +112,15 @@ const formatearUnidad = (unidad, cantidad) => {
       ? (Number(insumo.precio) / 1000) * c
       : Number(insumo.precio) * c;
 
-  const ingrediente = {
+  /*const ingrediente = {
+    nombre: insumo.nombre,
+    unidad: insumo.unidad,
+    cantidad: c,
+    costo,
+  };*/
+
+    const ingrediente = {
+    insumo_id: insumo.id,
     nombre: insumo.nombre,
     unidad: insumo.unidad,
     cantidad: c,
@@ -292,11 +300,21 @@ const guardarCambiosReceta = async () => {
 
       const ingredientesActualizados =
         receta.ingredientes?.map((ing) => {
-          const insumoActual = insumosDB.find(
+         /* const insumoActual = insumosDB.find(
             (i) =>
               i.nombre?.toLowerCase().trim() ===
               ing.nombre?.toLowerCase().trim()
-          );
+          );*/
+
+          const insumoActual = ing.insumo_id
+          ? insumosDB.find(
+              (i) => Number(i.id) === Number(ing.insumo_id)
+            )
+          : insumosDB.find(
+              (i) =>
+                i.nombre?.toLowerCase().trim() ===
+                ing.nombre?.toLowerCase().trim()
+            );
 
           if (!insumoActual) {
             return ing;
@@ -319,8 +337,16 @@ const guardarCambiosReceta = async () => {
 
           costoIngredientes += costo;
 
+/*          return {
+            ...ing,
+            costo,
+          };*/
+
           return {
             ...ing,
+            insumo_id: insumoActual.id,
+            nombre: insumoActual.nombre,
+            unidad: insumoActual.unidad,
             costo,
           };
         }) || [];
