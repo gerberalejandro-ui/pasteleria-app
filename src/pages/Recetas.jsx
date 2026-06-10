@@ -146,94 +146,65 @@ const eliminarIngrediente = (index) => {
     nuevaReceta.ingredientes.reduce((a, b) => a + b.costo, 0);
 
   /* ================= GUARDAR ================= */
-  const guardarReceta = async () => {
-    // ✅ FIX
-    if (nuevaReceta.ingredientes.length === 0) {
-      alert("Agregá al menos un ingrediente");
-      return;
-    }
+  const guardarCambiosReceta = async () => {
+  const { data: configDB } = await supabase
+    .from("costo_config")
+    .select("*");
 
-        const ingredientes = calcularCostoIngredientes();
+  const cfg = {};
 
-        // traer config REAL desde supabase
-        const { data: configDB } = await supabase
-          .from("costo_config")
-          .select("*");
+  configDB.forEach((c) => {
+    cfg[c.clave] = Number(c.valor);
+  });
 
-        const cfg = {};
+  let costoIngredientes = 0;
 
-        configDB.forEach((c) => {
-          cfg[c.clave] = Number(c.valor);
-        });
+  const ingredientesActualizados =
+    recetaEditando.ingredientes.map((ing) => {
 
-        const manoObra =
-          Number(nuevaReceta.tiempo_horas || 0) *
-          Number(cfg.costo_hora_hombre || 0);
+      const insumoActual = insumos.find(
+        (i) => Number(i.id) === Number(ing.insumo_id)
+      );
 
-        const luz =
-          Number(nuevaReceta.horas_luz || 0) *
-          Number(cfg.costo_luz_hora || 0);
+      if (!insumoActual) return ing;
 
-        const costoFinal = ingredientes + manoObra + luz;
+      const costo =
+        insumoActual.unidad === "kg" ||
+        insumoActual.unidad === "litro"
+          ? (Number(insumoActual.precio) / 1000) *
+            Number(ing.cantidad)
+          : Number(insumoActual.precio) *
+            Number(ing.cantidad);
 
-    const precioFinal =
-      costoFinal + (costoFinal * Number(nuevaReceta.margen || 0)) / 100;
+      costoIngredientes += costo;
 
-    // ✅ FIX
-   const { error } = await supabase.from("recetas").insert([
-  {
-    nombre: nuevaReceta.nombre,
-    procedimiento: nuevaReceta.procedimiento,
-
-    tiempo_horas: Number(nuevaReceta.tiempo_horas),
-    horas_luz: Number(nuevaReceta.horas_luz),
-
-    valor_hora: Number(manoObra),
-    costo_luz: Number(luz),
-
-    margen: Number(nuevaReceta.margen || 0),
-
-    ingredientes: nuevaReceta.ingredientes,
-
-    costo: Number(costoFinal),
-    precio_final: Number(precioFinal),
-  },
-]);
-
-    if (error) {
-      console.log(error);
-      alert("Error al guardar receta");
-      return;
-    }
-
-    await cargarDatos();
-
-    setNuevaReceta({
-      nombre: "",
-      margen: "",
-      procedimiento: "",
-      tiempo_horas: "",
-      horas_luz: "",
-      ingredientes: [],
+      return {
+        ...ing,
+        nombre: insumoActual.nombre,
+        unidad: insumoActual.unidad,
+        costo,
+      };
     });
 
-    setMostrarFormulario(false);
-  };
+  const manoObra =
+    Number(recetaEditando.tiempo_horas || 0) *
+    Number(cfg.costo_hora_hombre || 0);
 
-  const eliminarReceta = async (id) => {
-    await supabase.from("recetas").delete().eq("id", id);
-    cargarDatos();
-  };
+  const luz =
+    Number(recetaEditando.horas_luz || 0) *
+    Number(cfg.costo_luz_hora || 0);
 
-  const editarReceta = (receta) => {
-  setRecetaEditando({
-    ...receta,
-    ingredientes: [...(receta.ingredientes || [])],
-    });
-  };
+  const costoFinal =
+    costoIngredientes +
+    manoObra +
+    luz;
 
+  const precioFinal =
+    costoFinal +
+    (costoFinal *
+      Number(recetaEditando.margen || 0)) /
+      100;
 
-const guardarCambiosReceta = async () => {
   const { error } = await supabase
     .from("recetas")
     .update({
@@ -242,11 +213,16 @@ const guardarCambiosReceta = async () => {
       tiempo_horas: recetaEditando.tiempo_horas,
       horas_luz: recetaEditando.horas_luz,
       margen: recetaEditando.margen,
-      ingredientes: recetaEditando.ingredientes,
+      ingredientes: ingredientesActualizados,
+      valor_hora: manoObra,
+      costo_luz: luz,
+      costo: costoFinal,
+      precio_final: precioFinal,
     })
     .eq("id", recetaEditando.id);
 
   if (error) {
+    console.log(error);
     alert("Error al guardar cambios");
     return;
   }
@@ -257,7 +233,6 @@ const guardarCambiosReceta = async () => {
 
   alert("✅ Receta actualizada");
 };
-
 
  const recetasFiltradas = recetas
   .filter((r) =>
