@@ -684,41 +684,44 @@ const guardarCambiosReceta = async () => {
       }
     />
 
-    <input
-      style={styles.input}
-      type="number"
-      value={recetaEditando.tiempo_horas}
-      onChange={(e) =>
-        setRecetaEditando({
-          ...recetaEditando,
-          tiempo_horas: e.target.value,
-        })
-      }
-    />
+    <label>⏱ Horas de trabajo</label>
+<input
+  style={styles.input}
+  type="number"
+  value={recetaEditando.tiempo_horas}
+  onChange={(e) =>
+    setRecetaEditando({
+      ...recetaEditando,
+      tiempo_horas: e.target.value,
+    })
+  }
+/>
 
-    <input
-      style={styles.input}
-      type="number"
-      value={recetaEditando.horas_luz}
-      onChange={(e) =>
-        setRecetaEditando({
-          ...recetaEditando,
-          horas_luz: e.target.value,
-        })
-      }
-    />
+<label>💡 Horas de luz</label>
+<input
+  style={styles.input}
+  type="number"
+  value={recetaEditando.horas_luz}
+  onChange={(e) =>
+    setRecetaEditando({
+      ...recetaEditando,
+      horas_luz: e.target.value,
+    })
+  }
+/>
 
-    <input
-      style={styles.input}
-      type="number"
-      value={recetaEditando.margen}
-      onChange={(e) =>
-        setRecetaEditando({
-          ...recetaEditando,
-          margen: e.target.value,
-        })
-      }
-    />
+<label>📈 Margen (%)</label>
+<input
+  style={styles.input}
+  type="number"
+  value={recetaEditando.margen}
+  onChange={(e) =>
+    setRecetaEditando({
+      ...recetaEditando,
+      margen: e.target.value,
+    })
+  }
+/>
 
     <h3>Ingredientes</h3>
 
