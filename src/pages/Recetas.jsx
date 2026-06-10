@@ -7,6 +7,7 @@ export default function Recetas() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [recetaExpandida, setRecetaExpandida] = useState(null);
+  const [recetaEditando, setRecetaEditando] = useState(null);
 
   const [config, setConfig] = useState({
     costo_hora_hombre: 0,
@@ -215,6 +216,40 @@ const eliminarIngrediente = (index) => {
     await supabase.from("recetas").delete().eq("id", id);
     cargarDatos();
   };
+
+  const editarReceta = (receta) => {
+  setRecetaEditando({
+    ...receta,
+    ingredientes: [...(receta.ingredientes || [])],
+    });
+  };
+
+
+const guardarCambiosReceta = async () => {
+  const { error } = await supabase
+    .from("recetas")
+    .update({
+      nombre: recetaEditando.nombre,
+      procedimiento: recetaEditando.procedimiento,
+      tiempo_horas: recetaEditando.tiempo_horas,
+      horas_luz: recetaEditando.horas_luz,
+      margen: recetaEditando.margen,
+      ingredientes: recetaEditando.ingredientes,
+    })
+    .eq("id", recetaEditando.id);
+
+  if (error) {
+    alert("Error al guardar cambios");
+    return;
+  }
+
+  await cargarDatos();
+
+  setRecetaEditando(null);
+
+  alert("✅ Receta actualizada");
+};
+
 
  const recetasFiltradas = recetas
   .filter((r) =>
@@ -517,6 +552,120 @@ const eliminarIngrediente = (index) => {
       )}
 
       {/* LISTA */}
+
+{recetaEditando && (
+  <div style={styles.card}>
+    <h2>✏️ Editando receta</h2>
+
+    <input
+      style={styles.input}
+      value={recetaEditando.nombre}
+      onChange={(e) =>
+        setRecetaEditando({
+          ...recetaEditando,
+          nombre: e.target.value,
+        })
+      }
+    />
+
+    <textarea
+      style={styles.input}
+      value={recetaEditando.procedimiento}
+      onChange={(e) =>
+        setRecetaEditando({
+          ...recetaEditando,
+          procedimiento: e.target.value,
+        })
+      }
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      value={recetaEditando.tiempo_horas}
+      onChange={(e) =>
+        setRecetaEditando({
+          ...recetaEditando,
+          tiempo_horas: e.target.value,
+        })
+      }
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      value={recetaEditando.horas_luz}
+      onChange={(e) =>
+        setRecetaEditando({
+          ...recetaEditando,
+          horas_luz: e.target.value,
+        })
+      }
+    />
+
+    <input
+      style={styles.input}
+      type="number"
+      value={recetaEditando.margen}
+      onChange={(e) =>
+        setRecetaEditando({
+          ...recetaEditando,
+          margen: e.target.value,
+        })
+      }
+    />
+
+    <h3>Ingredientes</h3>
+
+    {recetaEditando.ingredientes.map((ing, index) => (
+      <div key={index} style={styles.rowIng}>
+        <span>{ing.nombre}</span>
+
+        <input
+          type="number"
+          value={ing.cantidad}
+          onChange={(e) => {
+            const nuevos =
+              [...recetaEditando.ingredientes];
+
+            nuevos[index].cantidad =
+              Number(e.target.value);
+
+            setRecetaEditando({
+              ...recetaEditando,
+              ingredientes: nuevos,
+            });
+          }}
+        />
+
+        <button
+          onClick={() => {
+            const nuevos =
+              recetaEditando.ingredientes.filter(
+                (_, i) => i !== index
+              );
+
+            setRecetaEditando({
+              ...recetaEditando,
+              ingredientes: nuevos,
+            });
+          }}
+        >
+          🗑
+        </button>
+      </div>
+    ))}
+
+    <button
+      onClick={guardarCambiosReceta}
+      style={styles.btnPrimary}
+    >
+      💾 Guardar cambios
+    </button>
+  </div>
+)}
+
+
 <div style={styles.table}>
 
   {/* TITULOS */}
@@ -551,6 +700,17 @@ const eliminarIngrediente = (index) => {
                   }
                 >
                   👁 Ver
+                </button>
+                
+                <button
+                  style={{
+                    ...styles.btnSmall,
+                    background: "#ffc107",
+                    color: "#000",
+                  }}
+                  onClick={() => editarReceta(r)}
+                >
+                  ✏️ Editar
                 </button>
 
                 <button
