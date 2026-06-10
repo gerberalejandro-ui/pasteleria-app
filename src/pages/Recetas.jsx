@@ -186,6 +186,28 @@ const eliminarIngrediente = (index) => {
       };
     });
 
+      const calcularCostoIngrediente = (insumo, cantidad) => {
+        if (!insumo) return 0;
+
+        if (
+          insumo.unidad === "kg" ||
+          insumo.unidad === "litro"
+        ) {
+          return (Number(insumo.precio) / 1000) * Number(cantidad);
+        }
+
+        return Number(insumo.precio) * Number(cantidad);
+      };
+
+      const calcularCostoEdicion = () => {
+        if (!recetaEditando) return 0;
+
+        return recetaEditando.ingredientes.reduce(
+          (acc, ing) => acc + Number(ing.costo || 0),
+          0
+        );
+      };
+
   const manoObra =
     Number(recetaEditando.tiempo_horas || 0) *
     Number(cfg.costo_hora_hombre || 0);
@@ -650,26 +672,38 @@ const eliminarIngrediente = (index) => {
           type="button"
           style={styles.btnSecondary}
           onClick={() => {
+
             const insumo = insumos.find(
               (i) => String(i.id) === String(insumoId)
             );
 
             if (!insumo || !cantidad) return;
 
-            const c = Number(cantidad);
+            const existe =
+              recetaEditando.ingredientes.some(
+                (ing) =>
+                  Number(ing.insumo_id) ===
+                  Number(insumo.id)
+              );
 
-            const costo =
-              insumo.unidad === "kg" ||
-              insumo.unidad === "litro"
-                ? (Number(insumo.precio) / 1000) * c
-                : Number(insumo.precio) * c;
+            if (existe) {
+              alert(
+                "Ese ingrediente ya existe en la receta"
+              );
+              return;
+            }
+
+            const c = Number(cantidad);
 
             const nuevoIngrediente = {
               insumo_id: insumo.id,
               nombre: insumo.nombre,
               unidad: insumo.unidad,
               cantidad: c,
-              costo,
+              costo: calcularCostoIngrediente(
+                insumo,
+                c
+              ),
             };
 
             setRecetaEditando({
@@ -692,22 +726,41 @@ const eliminarIngrediente = (index) => {
         <span>{ing.nombre}</span>
 
         <input
-          type="number"
-          value={ing.cantidad}
-          onChange={(e) => {
-            const nuevos =
-              [...recetaEditando.ingredientes];
+            type="number"
+            value={ing.cantidad}
+            onChange={(e) => {
 
-            nuevos[index].cantidad =
-              Number(e.target.value);
+              const nuevos =
+                [...recetaEditando.ingredientes];
 
-            setRecetaEditando({
-              ...recetaEditando,
-              ingredientes: nuevos,
-            });
-          }}
-        />
+              const nuevaCantidad =
+                Number(e.target.value);
 
+              const insumoActual =
+                insumos.find(
+                  (i) =>
+                    Number(i.id) ===
+                    Number(ing.insumo_id)
+                );
+
+              nuevos[index] = {
+                ...nuevos[index],
+                cantidad: nuevaCantidad,
+                costo: calcularCostoIngrediente(
+                  insumoActual,
+                  nuevaCantidad
+                ),
+              };
+
+              setRecetaEditando({
+                ...recetaEditando,
+                ingredientes: nuevos,
+              });
+            }}
+          />
+          <span>
+            ${Number(ing.costo || 0).toFixed(2)}
+          </span>
         <button
           onClick={() => {
             const nuevos =
@@ -726,6 +779,18 @@ const eliminarIngrediente = (index) => {
       </div>
     ))}
 
+    <div
+      style={{
+        padding: 15,
+        marginTop: 15,
+        background: "#fff0f6",
+        borderRadius: 10,
+        fontWeight: "bold",
+      }}
+    >
+      💰 Costo ingredientes:
+      ${calcularCostoEdicion().toFixed(2)}
+    </div>
     <button
       onClick={guardarCambiosReceta}
       style={styles.btnPrimary}
