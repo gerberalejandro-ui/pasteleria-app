@@ -232,111 +232,32 @@ const eliminarIngrediente = (index) => {
     });
   };
 
+
 const guardarCambiosReceta = async () => {
-  try {
-    const { data: insumosDB } = await supabase
-      .from("insumos")
-      .select("*");
+  const { error } = await supabase
+    .from("recetas")
+    .update({
+      nombre: recetaEditando.nombre,
+      procedimiento: recetaEditando.procedimiento,
+      tiempo_horas: recetaEditando.tiempo_horas,
+      horas_luz: recetaEditando.horas_luz,
+      margen: recetaEditando.margen,
+      ingredientes: recetaEditando.ingredientes,
+    })
+    .eq("id", recetaEditando.id);
 
-    const { data: configDB } = await supabase
-      .from("costo_config")
-      .select("*");
-
-    const cfg = {};
-
-    configDB.forEach((c) => {
-      cfg[c.clave] = Number(c.valor);
-    });
-
-    let costoIngredientes = 0;
-
-    const ingredientesActualizados =
-      recetaEditando.ingredientes.map((ing) => {
-        const insumo = insumosDB.find(
-          (i) => Number(i.id) === Number(ing.insumo_id)
-        );
-
-        if (!insumo) return ing;
-
-        let costo = 0;
-
-        if (
-          insumo.unidad === "kg" ||
-          insumo.unidad === "litro"
-        ) {
-          costo =
-            (Number(insumo.precio) / 1000) *
-            Number(ing.cantidad);
-        } else {
-          costo =
-            Number(insumo.precio) *
-            Number(ing.cantidad);
-        }
-
-        costoIngredientes += costo;
-
-        return {
-          ...ing,
-          nombre: insumo.nombre,
-          unidad: insumo.unidad,
-          costo,
-        };
-      });
-
-    const manoObra =
-      Number(recetaEditando.tiempo_horas || 0) *
-      Number(cfg.costo_hora_hombre || 0);
-
-    const luz =
-      Number(recetaEditando.horas_luz || 0) *
-      Number(cfg.costo_luz_hora || 0);
-
-    const costoFinal =
-      costoIngredientes +
-      manoObra +
-      luz;
-
-    const precioFinal =
-      costoFinal +
-      (costoFinal *
-        Number(recetaEditando.margen || 0)) /
-        100;
-
-    const { error } = await supabase
-      .from("recetas")
-      .update({
-        nombre: recetaEditando.nombre,
-        procedimiento: recetaEditando.procedimiento,
-        tiempo_horas: recetaEditando.tiempo_horas,
-        horas_luz: recetaEditando.horas_luz,
-        margen: recetaEditando.margen,
-
-        ingredientes: ingredientesActualizados,
-
-        valor_hora: manoObra,
-        costo_luz: luz,
-
-        costo: costoFinal,
-        precio_final: precioFinal,
-      })
-      .eq("id", recetaEditando.id);
-
-    if (error) {
-      console.log(error);
-      alert("Error al guardar cambios");
-      return;
-    }
-
-    await cargarDatos();
-
-    setRecetaEditando(null);
-
-    alert("✅ Receta actualizada");
-  } catch (err) {
-    console.log(err);
-    alert("❌ Error al actualizar receta");
+  if (error) {
+    alert("Error al guardar cambios");
+    return;
   }
+
+  await cargarDatos();
+
+  setRecetaEditando(null);
+
+  alert("✅ Receta actualizada");
 };
+
 
  const recetasFiltradas = recetas
   .filter((r) =>
