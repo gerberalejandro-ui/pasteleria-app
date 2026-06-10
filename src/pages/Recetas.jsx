@@ -256,57 +256,6 @@ const guardarCambiosReceta = async () => {
   setRecetaEditando(null);
 
   alert("✅ Receta actualizada");
-
-  let costoIngredientes = 0;
-
-    const ingredientesActualizados =
-      recetaEditando.ingredientes.map((ing) => {
-
-        const insumo = insumos.find(
-          (i) =>
-            Number(i.id) === Number(ing.insumo_id)
-        );
-
-        if (!insumo) return ing;
-
-        const costo =
-          insumo.unidad === "kg" ||
-          insumo.unidad === "litro"
-            ? (Number(insumo.precio) / 1000) *
-              Number(ing.cantidad)
-            : Number(insumo.precio) *
-              Number(ing.cantidad);
-
-        costoIngredientes += costo;
-
-        return {
-          ...ing,
-          costo,
-        };
-  });
-
-  const manoObra =
-  Number(recetaEditando.tiempo_horas || 0) *
-  Number(config.costo_hora_hombre || 0);
-
-const luz =
-  Number(recetaEditando.horas_luz || 0) *
-  Number(config.costo_luz_hora || 0);
-
-const costoFinal =
-  costoIngredientes +
-  manoObra +
-  luz;
-
-const precioFinal =
-  costoFinal +
-  (costoFinal *
-    Number(recetaEditando.margen || 0)) /
-    100;
-
-    ingredientes: ingredientesActualizados,
-      costo: costoFinal,
-      precio_final: precioFinal,
 };
 
 
