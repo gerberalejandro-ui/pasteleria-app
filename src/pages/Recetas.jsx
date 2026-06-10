@@ -723,7 +723,7 @@ const guardarCambiosReceta = async () => {
   }
 />
 
-    <h3>Ingredientes</h3>
+    <h3>🧪 Ingredientes de la receta</h3>
 
         <select
           value={insumoId}
