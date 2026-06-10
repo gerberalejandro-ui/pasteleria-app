@@ -7,6 +7,7 @@ export default function Recetas() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [recetaExpandida, setRecetaExpandida] = useState(null);
+  const [divisiones, setDivisiones] = useState({});
   const [recetaEditando, setRecetaEditando] = useState(null);
 
   const [config, setConfig] = useState({
@@ -933,7 +934,58 @@ const guardarCambiosReceta = async () => {
                     <span>${r.precio_final}</span>
                     <span></span>
                   </div>
+                  <hr style={{ margin: "15px 0" }} />
 
+                  <h4>🧮 Calcular costo por unidad</h4>
+
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ej: 12 alfajores"
+                    value={divisiones[r.id] || ""}
+                    onChange={(e) =>
+                      setDivisiones({
+                        ...divisiones,
+                        [r.id]: e.target.value,
+                      })
+                    }
+                    style={styles.input}
+                  />
+
+                  {Number(divisiones[r.id]) > 0 && (
+                    <div
+                      style={{
+                        background: "#e8f5e9",
+                        padding: 10,
+                        borderRadius: 8,
+                        marginBottom: 10,
+                      }}
+                    >
+                      <div>
+                        💰 Costo por unidad:
+                        <strong>
+                          {" "}
+                          $
+                          {(
+                            Number(r.costo) /
+                            Number(divisiones[r.id])
+                          ).toFixed(2)}
+                        </strong>
+                      </div>
+
+                      <div>
+                        💵 Precio por unidad:
+                        <strong>
+                          {" "}
+                          $
+                          {(
+                            Number(r.precio_final) /
+                            Number(divisiones[r.id])
+                          ).toFixed(2)}
+                        </strong>
+                      </div>
+                    </div>
+                  )}
                 <h4>Ingredientes</h4>
 
                 <div style={styles.rowIng}>
